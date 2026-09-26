@@ -7,7 +7,7 @@ config_version=5
 
 config/name="深城日常"
 config/description="无任务、无数值面板的深圳都市生活模拟游戏。"
-config/version="0.1.0"
+config/version="0.2.0"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.2", "GL Compatibility")
 boot_splash/bg_color=Color(0.055, 0.067, 0.078, 1)
@@ -27,6 +27,8 @@ WeatherSystem="*res://autoload/weather_system.gd"
 CollectionManager="*res://autoload/collection_manager.gd"
 ProgressionManager="*res://autoload/progression_manager.gd"
 RelationshipManager="*res://autoload/relationship_manager.gd"
+MarketEconomyManager="*res://autoload/market_economy_manager.gd"
+ExpeditionManager="*res://autoload/expedition_manager.gd"
 GameState="*res://autoload/game_state.gd"
 AudioManager="*res://autoload/audio_manager.gd"
 SceneRouter="*res://autoload/scene_router.gd"

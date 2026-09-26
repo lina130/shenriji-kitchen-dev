@@ -4,7 +4,7 @@ signal game_loaded
 signal game_saved
 
 const SAVE_PATH := "user://deep_city_save.json"
-const SAVE_VERSION := 2
+const SAVE_VERSION := 3
 
 func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
@@ -21,6 +21,8 @@ func save_game(show_notice: bool = true) -> bool:
 		"collection": CollectionManager.get_save_data(),
 		"progression": ProgressionManager.get_save_data(),
 		"relationships": RelationshipManager.get_save_data(),
+		"market_economy": MarketEconomyManager.get_save_data(),
+		"expedition": ExpeditionManager.get_save_data(),
 	}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
@@ -58,6 +60,8 @@ func load_game(show_notice: bool = true) -> bool:
 	CollectionManager.restore(data.get("collection", {}))
 	ProgressionManager.restore(data.get("progression", {}))
 	RelationshipManager.restore(data.get("relationships", {}))
+	MarketEconomyManager.restore(data.get("market_economy", {}))
+	ExpeditionManager.restore(data.get("expedition", {}))
 	SceneRouter.restore(GameState.current_area, GameState.spawn_id)
 	game_loaded.emit()
 	if show_notice:

@@ -23,6 +23,8 @@ func _draw() -> void:
 			_draw_market()
 		"park":
 			_draw_park()
+		"ruins":
+			_draw_ruins()
 		_:
 			draw_rect(Rect2(0, 0, 1280, 720), Color("#17242b"))
 
@@ -110,6 +112,19 @@ func _draw_park() -> void:
 		draw_circle(Vector2(x, 130 + (x % 3) * 30), 44.0, Color("#3e6c52"))
 		draw_rect(Rect2(x - 7, 160, 14, 70), Color("#684d39"))
 	_draw_walls(Color("#315246"))
+func _draw_ruins() -> void:
+	draw_rect(Rect2(0, 0, 1280, 720), Color("#111b20"))
+	_draw_floor_grid(Color(0.18, 0.25, 0.27, 0.35), 72)
+	_draw_walls(Color("#081014"))
+	for index in range(7):
+		var x := 90.0 + index * 180.0
+		draw_rect(Rect2(x, 80, 54, 420), Color("#24343a"))
+		draw_rect(Rect2(x + 8, 96, 10, 388), Color("#50666b"))
+	for index in range(5):
+		draw_ellipse(Vector2(170 + index * 250, 610), 82.0, 24.0, Color(0.18, 0.43, 0.48, 0.18), true)
+	draw_rect(Rect2(0, 0, 1280, 38), Color("#050b0e"))
+	draw_rect(Rect2(0, 682, 1280, 38), Color("#050b0e"))
+
 func _draw_floor_grid(color: Color, step: int) -> void:
 	for x in range(0, 1281, step):
 		draw_line(Vector2(x, 0), Vector2(x, 720), color, 1.0)

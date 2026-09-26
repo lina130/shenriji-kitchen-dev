@@ -10,6 +10,11 @@ var world: WorldRoot
 var in_game := false
 
 func _ready() -> void:
+	if "--playtest" in OS.get_cmdline_user_args():
+		get_tree().auto_accept_quit = false
+		var playtest_script := load("res://tests/playtest_runner.gd")
+		add_child(playtest_script.new())
+		return
 	if "--stress-test" in OS.get_cmdline_user_args():
 		var stress_script := load("res://tests/stress_test.gd")
 		add_child(stress_script.new())
@@ -55,6 +60,7 @@ func _enter_game() -> void:
 	world.inventory_requested.connect(hud.open_inventory)
 	world.npc_requested.connect(hud.open_dialogue)
 	world.market_requested.connect(hud.open_market)
+	world.expedition_map_requested.connect(hud.open_expedition_map)
 	hud.modal_changed.connect(_on_modal_changed)
 	hud.return_to_menu_requested.connect(_show_main_menu)
 	GameState.monthly_summary_ready.connect(hud.show_month_summary)

@@ -2,7 +2,7 @@ extends Node
 
 signal travel_completed(area_id: String, spawn_id: String)
 
-const VALID_AREAS := ["home", "street", "factory", "store"]
+const VALID_AREAS := ["home", "street", "factory", "store", "recycle", "market", "park", "ruins"]
 
 func travel_to(area_id: String, spawn_id: String = "default") -> void:
 	if area_id not in VALID_AREAS:

@@ -4,7 +4,7 @@ extends CanvasLayer
 signal modal_changed(is_open: bool)
 signal return_to_menu_requested
 
-enum ModalState { NONE, INVENTORY, SHOP, MARKET, COLLECTION_LOG, MAP, BANK, DIALOGUE, MONTHLY, PAUSE }
+enum ModalState { NONE, INVENTORY, SHOP, MARKET, COLLECTION_LOG, MAP, BANK, DIALOGUE, MONTHLY, PAUSE, EXPEDITION_MAP }
 
 var _root: Control
 var _ambient_overlay: ColorRect
@@ -23,6 +23,7 @@ var _modal_items: VBoxContainer
 var _notice_time_left := 0.0
 var _clock_accumulator := 0.0
 var _modal_state := ModalState.NONE
+var _fog_overlay: ColorRect
 var _active_npc_id := ""
 
 func _ready() -> void:
@@ -44,6 +45,7 @@ func _process(delta: float) -> void:
 		_clock_accumulator = 0.0
 		_update_clock()
 	_apply_ambient_state()
+	_apply_expedition_state()
 	if _notice_time_left > 0.0:
 		_notice_time_left -= delta
 		if _notice_time_left <= 0.0:
@@ -95,6 +97,10 @@ func open_market(_market_id: String = "old_market") -> void:
 	_build_market_content()
 	_set_modal(ModalState.MARKET, "旧货行", "旧东西没有统一价钱，愿意收就换点生活费。")
 
+func open_expedition_map() -> void:
+	_build_expedition_map_content()
+	_set_modal(ModalState.EXPEDITION_MAP, "旧物行深处", MarketEconomyManager.get_market_brief())
+
 func open_collection_log() -> void:
 	_build_collection_log_content()
 	_set_modal(ModalState.COLLECTION_LOG, "旧物册", "逛到过的东西会留在这里，不催你去凑齐。")
@@ -142,6 +148,15 @@ func _build_interface() -> void:
 	_ambient_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_ambient_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_ambient_overlay)
+
+	_fog_overlay = ColorRect.new()
+	_fog_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_fog_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var fog_material := ShaderMaterial.new()
+	fog_material.shader = load("res://shaders/fog_of_war.gdshader")
+	_fog_overlay.material = fog_material
+	_fog_overlay.visible = false
+	_root.add_child(_fog_overlay)
 
 	_status_panel = PanelContainer.new()
 	_status_panel.position = Vector2(24, 20)
@@ -280,19 +295,37 @@ func _build_shop_content() -> void:
 
 func _build_market_content() -> void:
 	_clear_modal_items()
+	_modal_items.add_child(_make_empty_label(MarketEconomyManager.get_market_brief()))
+	_modal_items.add_child(_make_empty_label("%s · %s" % [MarketEconomyManager.get_stall_name(), MarketEconomyManager.get_consignment_summary()]))
 	var entries := InventoryManager.get_giftable_lines()
 	if entries.is_empty():
-		_modal_items.add_child(_make_empty_label("今天没有能拿来换钱或送人的旧物。"))
-		return
-	for entry in entries:
-		var button := Button.new()
-		button.custom_minimum_size = Vector2(0, 54)
-		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		button.text = "%s  ×%d    ¥%d" % [entry["name"], entry["count"], int(entry["sell_price"])]
-		button.tooltip_text = str(entry["description"])
-		button.pressed.connect(_on_market_sell.bind(str(entry["id"])))
-		_modal_items.add_child(button)
-	_modal_items.add_child(_make_empty_label("稀有旧物留着送人，往往比卖掉更值得。"))
+		_modal_items.add_child(_make_empty_label("包里没有能出手的旧物。"))
+	else:
+		for entry in entries:
+			var row := HBoxContainer.new()
+			row.add_theme_constant_override("separation", 8)
+			var price := MarketEconomyManager.get_current_price(str(entry["id"]))
+			var info := Label.new()
+			info.text = "%s ×%d · %s" % [entry["name"], entry["count"], MarketEconomyManager.get_demand_label(str(entry["id"]))]
+			info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			info.add_theme_color_override("font_color", Color("#d9e7e1"))
+			row.add_child(info)
+			var sell_button := Button.new()
+			sell_button.text = "卖 ¥%d" % price
+			sell_button.pressed.connect(_on_market_sell.bind(str(entry["id"])))
+			row.add_child(sell_button)
+			var consign_button := Button.new()
+			consign_button.text = "寄卖"
+			consign_button.pressed.connect(_on_market_consign.bind(str(entry["id"])))
+			row.add_child(consign_button)
+			_modal_items.add_child(row)
+	if MarketEconomyManager.stall_tier < 2:
+		var cost := 900 if MarketEconomyManager.stall_tier == 0 else 2400
+		var upgrade := Button.new()
+		upgrade.text = "把摊位做大一点 · ¥%d" % cost
+		upgrade.custom_minimum_size = Vector2(0, 50)
+		upgrade.pressed.connect(_on_market_upgrade)
+		_modal_items.add_child(upgrade)
 
 func _build_collection_log_content() -> void:
 	_clear_modal_items()
@@ -325,8 +358,51 @@ func _on_shop_buy(item_id: String) -> void:
 		show_notice("买到%s，装进包里了。" % item.get("name", item_id), "positive")
 
 func _on_market_sell(item_id: String) -> void:
-	if CollectionManager.sell_collectible(item_id):
+	if MarketEconomyManager.sell_now(item_id):
 		_build_market_content()
+
+func _on_market_consign(item_id: String) -> void:
+	if MarketEconomyManager.consign_item(item_id):
+		_build_market_content()
+
+func _on_market_upgrade() -> void:
+	if MarketEconomyManager.upgrade_stall():
+		_build_market_content()
+
+func _build_expedition_map_content() -> void:
+	_clear_modal_items()
+	_modal_items.add_child(_make_empty_label(MarketEconomyManager.get_market_brief()))
+	for site_id in ConfigDB.get_rows("ruins"):
+		var row := ConfigDB.get_row("ruins", site_id)
+		var unlocked := MarketEconomyManager.is_site_unlocked(site_id)
+		var button := Button.new()
+		button.custom_minimum_size = Vector2(0, 58)
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.text = "%s%s" % [row.get("name", site_id), "" if unlocked else " · 还没有门路"]
+		button.tooltip_text = str(row.get("description", ""))
+		button.disabled = not unlocked
+		button.pressed.connect(_on_expedition_enter.bind(site_id))
+		_modal_items.add_child(button)
+		_modal_items.add_child(_make_empty_label(MarketEconomyManager.get_unlock_hint(site_id)))
+
+func _on_expedition_enter(site_id: String) -> void:
+	_close_modal()
+	ExpeditionManager.start_run(site_id)
+
+func _apply_expedition_state() -> void:
+	if not is_instance_valid(_fog_overlay):
+		return
+	var world = get_tree().get_first_node_in_group("world")
+	var active = ExpeditionManager.active and GameState.current_area == "ruins" and is_instance_valid(world) and is_instance_valid(world.player)
+	_fog_overlay.visible = active
+	if not active:
+		return
+	var light_center: Vector2 = world.player.global_position * world._area_root.scale + world._area_root.position
+	var material := _fog_overlay.material as ShaderMaterial
+	material.set_shader_parameter("light_center", light_center)
+	material.set_shader_parameter("light_radius", ExpeditionManager.get_light_radius())
+	material.set_shader_parameter("darkness", ExpeditionManager.get_fog_strength())
+
 func _build_map_content() -> void:
 	_clear_modal_items()
 	var area_text := "出租屋 · 城中村街道 · 工业区工厂 · 街角便利店\n废品回收站 · 旧货市场 · 社区公园"

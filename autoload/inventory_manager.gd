@@ -41,6 +41,7 @@ func _load_catalog() -> void:
 			"sell_price": int(row.get("sell_price", "0")),
 			"gift_npc": str(row.get("gift_npc", "")),
 			"displayable": str(row.get("displayable", "false")).to_lower() == "true",
+			"market_category": str(row.get("market_category", "daily")),
 		}
 
 func get_item(item_id: String) -> Dictionary:

@@ -1,0 +1,5 @@
+site_id,name,description,required_requirement,spawn_count,duration_seconds,rarity_bonus,energy_cost,entry_fee
+alley_basement,旧楼地下室,潮湿的低矮空间，入口就在旧货市场后面。,none,8,160,0.0,2,0
+old_pipe,废弃管道层,做熟几笔旧货生意后，陈伯才肯告诉你管道入口。,sales_600,10,180,0.12,3,20
+sealed_workshop,封存车间,盘下固定摊位后，才有资格进去翻找封存多年的旧货。,stall_1,12,210,0.20,4,45
+flooded_tunnel,积水隧道,老熟客牵线后，才能走进积水隧道寻找隐藏旧物。,reputation_5,14,240,0.30,5,80

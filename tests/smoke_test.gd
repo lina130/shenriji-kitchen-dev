@@ -23,6 +23,8 @@ func _run_tests() -> void:
 	_test_weather_system()
 	_test_relationship_and_gift()
 	_test_study_and_exercise()
+	_test_market_economy()
+	_test_expedition()
 	_test_save_and_load()
 	_test_30_day_cycle()
 
@@ -101,6 +103,43 @@ func _test_study_and_exercise() -> void:
 	_check(is_equal_approx(GameState.energy, 82.0), "锻炼应消耗体力")
 	_check(ProgressionManager.fitness_sessions == 1, "锻炼应留下隐藏成长")
 
+
+func _test_market_economy() -> void:
+	GameState.reset_new_game()
+	MarketEconomyManager.hot_category = "photo"
+	MarketEconomyManager.cold_category = "metal"
+	InventoryManager.add_item("film_camera", 1)
+	var hot_price := MarketEconomyManager.get_current_price("film_camera")
+	_check(hot_price > int(InventoryManager.get_item("film_camera").get("sell_price", 0)), "热门品类应按基础价偏高成交")
+	var money_before := GameState.money
+	_check(MarketEconomyManager.sell_now("film_camera"), "旧货应能按当日行情立即出售")
+	_check(GameState.money > money_before, "立即出售后应收到现金")
+	InventoryManager.add_item("old_radio", 1)
+	_check(MarketEconomyManager.consign_item("old_radio"), "旧货应能放进摊位寄卖")
+	_check(MarketEconomyManager.consignment_orders.size() == 1, "寄卖柜应记录订单")
+	GameState.money = 10000
+	_check(MarketEconomyManager.upgrade_stall(), "赚到钱后应能扩大摊位")
+	_check(MarketEconomyManager.stall_tier == 1, "摊位应提升到固定摊位")
+	_check(MarketEconomyManager.get_consignment_slots() == 4, "固定摊位应增加寄卖容量")
+	_check(MarketEconomyManager.is_site_unlocked("sealed_workshop"), "摊位规模应解锁封存车间")
+
+func _test_expedition() -> void:
+	GameState.reset_new_game()
+	GameState.energy = 100.0
+	_check(MarketEconomyManager.is_site_unlocked("alley_basement"), "旧楼地下室应作为免费入口开放")
+	_check(ExpeditionManager.start_run("alley_basement"), "应能进入旧址探索")
+	_check(ExpeditionManager.active, "进入后探索状态应激活")
+	_check(not ExpeditionManager.get_area_spawns().is_empty(), "旧址内应生成旧物点")
+	_check(is_equal_approx(TimeSystem.time_scale, 0.05), "探索时应放慢生活时间")
+	var spawn: Dictionary = ExpeditionManager.get_area_spawns()[0]
+	var item_id := str(spawn.get("item_id", ""))
+	_check(ExpeditionManager.collect_spawn(str(spawn.get("spawn_id", ""))), "应能拾取旧址旧物")
+	_check(InventoryManager.get_count(item_id) >= 1, "旧址旧物应进入背包")
+	ExpeditionManager.end_run("returned")
+	_check(not ExpeditionManager.active, "离开旧址后探索状态应结束")
+	_check(GameState.current_area == "market", "离开旧址应回到旧货市场")
+	_check(is_equal_approx(TimeSystem.time_scale, 1.0), "离开旧址后时间速度应恢复")
+
 func _test_save_and_load() -> void:
 	GameState.reset_new_game()
 	GameState.money = 777
@@ -116,6 +155,10 @@ func _test_save_and_load() -> void:
 	TimeSystem.current_day = 12
 	TimeSystem.minute_of_day = 18 * 60
 	WeatherSystem.current_weather_id = "rain"
+	MarketEconomyManager.total_sales = 1234
+	MarketEconomyManager.stall_tier = 1
+	ExpeditionManager.active = false
+	ExpeditionManager.site_id = "old_pipe"
 	_check(SaveManager.save_game(false), "应能写入扩展测试存档")
 	GameState.money = 1
 	GameState.hidden_luck = 0.0
@@ -134,6 +177,8 @@ func _test_save_and_load() -> void:
 	var restored_spawns := CollectionManager.get_area_spawns("street")
 	_check(not restored_spawns.is_empty() and typeof(restored_spawns[0].get("position")) == TYPE_VECTOR2, "读档后摸金点坐标应保持 Vector2")
 	_check(TimeSystem.current_day == 12 and WeatherSystem.current_weather_id == "rain", "读档应恢复时间与天气")
+	_check(MarketEconomyManager.total_sales == 1234 and MarketEconomyManager.stall_tier == 1, "读档应恢复旧货行情进度")
+	_check(ExpeditionManager.site_id == "old_pipe", "读档应恢复旧址记录")
 
 func _test_30_day_cycle() -> void:
 	GameState.reset_new_game()

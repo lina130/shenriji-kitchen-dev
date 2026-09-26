@@ -9,6 +9,7 @@ func _ready() -> void:
 	_load_table("balance", "res://data/balance.csv", "key")
 	_load_table("weather", "res://data/weather.csv", "weather_id")
 	_load_table("npcs", "res://data/npcs.csv", "npc_id")
+	_load_table("ruins", "res://data/ruins.csv", "site_id")
 
 func get_rows(table_name: String) -> Dictionary:
 	return tables.get(table_name, {})

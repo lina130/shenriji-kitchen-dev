@@ -6,6 +6,7 @@ signal inventory_requested(reason: String)
 signal npc_requested(npc_id: String)
 signal market_requested(market_id: String)
 signal collection_log_requested
+signal expedition_map_requested
 
 const BackdropScript := preload("res://scripts/gameplay/area_backdrop.gd")
 const PlayerScript := preload("res://scripts/gameplay/player.gd")
@@ -19,6 +20,7 @@ var _player_input_locked := false
 var _map_zoom := 1.0
 
 func _ready() -> void:
+	add_to_group("world")
 	SceneRouter.travel_completed.connect(_on_travel_requested)
 	SaveManager.game_loaded.connect(_on_game_loaded)
 	_build_area(GameState.current_area, GameState.spawn_id)
@@ -117,6 +119,12 @@ func _build_collisions(area_id: String) -> void:
 			_add_wall(Rect2(330, 340, 580, 130))
 			_add_wall(Rect2(40, 40, 120, 120))
 			_add_wall(Rect2(1120, 40, 120, 120))
+		"ruins":
+			_add_wall(Rect2(100, 80, 320, 120))
+			_add_wall(Rect2(860, 80, 320, 120))
+			_add_wall(Rect2(100, 500, 250, 100))
+			_add_wall(Rect2(930, 500, 250, 100))
+			_add_wall(Rect2(480, 240, 320, 100))
 func _build_interactables(area_id: String) -> void:
 	match area_id:
 		"home":
@@ -143,12 +151,20 @@ func _build_interactables(area_id: String) -> void:
 			_add_interactable("recycle_exit", "回到街上", Vector2(640, 668), Vector2(120, 80), Color("#91a9a2"), Vector2(160, 130))
 		"market":
 			_add_interactable("market_stall", "看看能换什么", Vector2(640, 300), Vector2(260, 100), Color("#dc8a68"), Vector2(430, 250))
+			_add_interactable("expedition_board", "打听旧楼入口", Vector2(250, 300), Vector2(170, 95), Color("#7f9fb0"), Vector2(260, 180))
 			_add_interactable("market_exit", "回到街上", Vector2(640, 668), Vector2(120, 80), Color("#91a9a2"), Vector2(160, 130))
 		"park":
 			_add_interactable("exercise_equipment", "活动一下身体", Vector2(640, 305), Vector2(260, 100), Color("#72a97c"), Vector2(430, 250))
 			_add_interactable("park_exit", "回到街上", Vector2(640, 668), Vector2(120, 80), Color("#91a9a2"), Vector2(160, 130))
+		"ruins":
+			_add_interactable("ruins_exit", "顺着灯光回到地面", Vector2(640, 640), Vector2(150, 90), Color("#f0c968"), Vector2(220, 160))
 
 func _build_collection_nodes(area_id: String) -> void:
+	if area_id == "ruins":
+		for spawn in ExpeditionManager.get_area_spawns():
+			var point: Vector2 = spawn.get("position", Vector2.ZERO)
+			_add_interactable("collect|ruins|%s" % str(spawn.get("spawn_id", "")), "翻找黑暗里的旧物", point, Vector2(48, 48), _rarity_color(str(spawn.get("rarity", "common"))), Vector2(100, 100))
+		return
 	for spawn in CollectionManager.get_area_spawns(area_id):
 		var rarity := str(spawn.get("rarity", "common"))
 		var marker_color := _rarity_color(rarity)
@@ -198,7 +214,12 @@ func _on_interaction_requested(interaction_id: String) -> void:
 		npc_requested.emit(parts[1])
 		return
 	if parts.size() >= 3 and parts[0] == "collect":
-		if CollectionManager.collect_spawn(parts[1], parts[2]):
+		var collected := false
+		if parts[1] == "ruins":
+			collected = ExpeditionManager.collect_spawn(parts[2])
+		else:
+			collected = CollectionManager.collect_spawn(parts[1], parts[2])
+		if collected:
 			_remove_interactable(interaction_id)
 		return
 	match interaction_id:
@@ -242,6 +263,10 @@ func _on_interaction_requested(interaction_id: String) -> void:
 			_search_recycling()
 		"market_stall":
 			market_requested.emit("old_market")
+		"expedition_board":
+			expedition_map_requested.emit()
+		"ruins_exit":
+			ExpeditionManager.end_run("returned")
 		"exercise_equipment":
 			GameState.exercise_at_park()
 
@@ -313,6 +338,8 @@ func _spawn_position(area_id: String, spawn_id: String) -> Vector2:
 			return Vector2(640, 580)
 		"park:entrance":
 			return Vector2(640, 580)
+		"ruins:default":
+			return Vector2(640, 580)
 		_:
 			return Vector2(420, 400)
 
@@ -332,5 +359,7 @@ func _arrival_text(area_id: String) -> String:
 			return "旧货市场晒着太阳，每件旧东西都有自己的来历。"
 		"park":
 			return "公园里树影晃来晃去，走一走心里会松快些。"
+		"ruins":
+			return "%s里静得能听见水滴，灯光只够照亮脚边。" % ExpeditionManager.get_site_name()
 		_:
 			return ""

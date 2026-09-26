@@ -48,7 +48,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		wants_interact = wants_interact or (event.button_index == MOUSE_BUTTON_RIGHT and event.pressed)
 	if wants_interact and not nearby_interactables.is_empty():
 		_interact_with_nearest()
-		get_viewport().set_input_as_handled()
+		var viewport := get_viewport()
+		if viewport != null:
+			viewport.set_input_as_handled()
 
 func register_interactable(interactable: WorldInteractable) -> void:
 	if interactable not in nearby_interactables:

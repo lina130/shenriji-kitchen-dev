@@ -11,13 +11,14 @@ const REAL_SECONDS_PER_GAME_MINUTE := 0.1
 var current_day := 1
 var minute_of_day := 7 * 60
 var paused := false
+var time_scale := 1.0
 var _minute_accumulator := 0.0
 var _late_night_reported := false
 
 func _process(delta: float) -> void:
 	if paused:
 		return
-	_minute_accumulator += delta / REAL_SECONDS_PER_GAME_MINUTE
+	_minute_accumulator += delta / REAL_SECONDS_PER_GAME_MINUTE * time_scale
 	var whole_minutes := int(floor(_minute_accumulator))
 	if whole_minutes <= 0:
 		return
@@ -53,9 +54,13 @@ func reset_new_game() -> void:
 	_minute_accumulator = 0.0
 	_late_night_reported = false
 	paused = false
+	time_scale = 1.0
 	day_started.emit(current_day)
 	minute_changed.emit(minute_of_day)
 	paused_changed.emit(false)
+
+func set_time_scale(value: float) -> void:
+	time_scale = clampf(value, 0.01, 4.0)
 
 func set_paused(value: bool) -> void:
 	if paused == value:
@@ -114,6 +119,7 @@ func get_save_data() -> Dictionary:
 		"current_day": current_day,
 		"minute_of_day": minute_of_day,
 		"paused": paused,
+		"time_scale": time_scale,
 	}
 
 func restore(data: Dictionary) -> void:
@@ -122,6 +128,7 @@ func restore(data: Dictionary) -> void:
 	_minute_accumulator = 0.0
 	_late_night_reported = minute_of_day >= 120
 	paused = bool(data.get("paused", false))
+	time_scale = clampf(float(data.get("time_scale", 1.0)), 0.01, 4.0)
 	day_started.emit(current_day)
 	minute_changed.emit(minute_of_day)
 	paused_changed.emit(paused)
