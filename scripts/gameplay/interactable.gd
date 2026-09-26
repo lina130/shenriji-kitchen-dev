@@ -9,6 +9,7 @@ var accent_color := Color.WHITE
 var visual_size := Vector2(80, 80)
 var hit_size := Vector2.ZERO
 var available := true
+var mystery_mode := false
 var _nearby_player: Node
 
 func configure(
@@ -43,6 +44,10 @@ func _ready() -> void:
 	body_exited.connect(_on_body_exited)
 	queue_redraw()
 
+func set_mystery(value: bool) -> void:
+	mystery_mode = value
+	queue_redraw()
+
 func set_available(value: bool) -> void:
 	available = value
 	queue_redraw()
@@ -51,18 +56,22 @@ func _on_body_entered(body: Node) -> void:
 	if body.has_method("register_interactable"):
 		_nearby_player = body
 		body.register_interactable(self)
+		queue_redraw()
 
 func _on_body_exited(body: Node) -> void:
 	if body.has_method("unregister_interactable"):
 		if _nearby_player == body:
 			_nearby_player = null
 		body.unregister_interactable(self)
+		queue_redraw()
 
 func interact() -> void:
 	if available:
 		interaction_requested.emit(interaction_id)
 
 func _draw() -> void:
+	if mystery_mode and _nearby_player == null:
+		return
 	var alpha := 0.95 if available else 0.25
 	var center_color := Color(accent_color, alpha)
 	draw_rect(Rect2(-visual_size * 0.5, visual_size), Color(0.05, 0.08, 0.1, 0.92), true)

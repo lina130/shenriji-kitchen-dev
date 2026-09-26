@@ -7,6 +7,7 @@ var nearby_interactables: Array[WorldInteractable] = []
 var _facing := Vector2.DOWN
 var _walk_phase := 0.0
 var _input_locked := false
+var _walk_distance_accumulator := 0.0
 
 func _ready() -> void:
 	collision_layer = 1
@@ -38,6 +39,7 @@ func _physics_process(delta: float) -> void:
 		_walk_phase = 0.0
 	velocity = direction * BASE_SPEED * GameState.get_speed_multiplier()
 	move_and_slide()
+	_check_treasure_walk(delta)
 	queue_redraw()
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -62,6 +64,8 @@ func unregister_interactable(interactable: WorldInteractable) -> void:
 	_refresh_context()
 
 func _interact_with_nearest() -> void:
+	if nearby_interactables.is_empty():
+		return
 	nearby_interactables.sort_custom(func(a: WorldInteractable, b: WorldInteractable) -> bool:
 		return global_position.distance_squared_to(a.global_position) < global_position.distance_squared_to(b.global_position)
 	)
@@ -99,3 +103,15 @@ func _draw_shadow_ellipse(center: Vector2, radius: Vector2, color: Color) -> voi
 		var angle := TAU * float(i) / 24.0
 		points.append(center + Vector2(cos(angle) * radius.x, sin(angle) * radius.y))
 	draw_colored_polygon(points, color)
+
+func _check_treasure_walk(delta: float) -> void:
+	if _input_locked:
+		return
+	if velocity.length_squared() < 100.0:
+		return
+	_walk_distance_accumulator += velocity.length() * delta
+	if _walk_distance_accumulator < 260.0:
+		return
+	_walk_distance_accumulator = 0.0
+	TreasureManager.try_trigger_at("walk", global_position, GameState.current_area)
+

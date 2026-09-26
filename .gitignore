@@ -28,3 +28,5 @@ data/*.csv.import
 data/*.csv.txt
 release/
 docs/*.png.import
+
+/work/

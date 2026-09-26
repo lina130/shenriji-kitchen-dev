@@ -102,6 +102,7 @@ func work_factory_shift() -> void:
 	var wage := factory_wage + ProgressionManager.get_factory_wage_bonus()
 	earn(wage, "今天的工钱到手了：¥%d" % wage)
 	ProgressionManager.record_work("factory")
+	TreasureManager.try_trigger("work_shift")
 	player_action_completed.emit("factory_shift")
 
 func work_clerk_shift() -> void:
@@ -118,6 +119,7 @@ func work_clerk_shift() -> void:
 	var wage := int(round((clerk_wage + ProgressionManager.get_clerk_wage_bonus()) * sales_bonus))
 	earn(wage, "小林把今天的兼职工钱结给了你：¥%d" % wage)
 	ProgressionManager.record_work("clerk")
+	TreasureManager.try_trigger("work_shift")
 	player_action_completed.emit("clerk_shift")
 
 func study_at_desk() -> void:
@@ -168,6 +170,7 @@ func on_item_used(item: Dictionary) -> void:
 	player_action_completed.emit("use_item")
 
 func on_collection_collected(_item_id: String, rarity: String) -> void:
+	CollectionManager.total_collected += 1
 	hidden_luck = minf(100.0, hidden_luck + (4.0 if rarity == "legendary" else 1.0))
 	hidden_reputation = minf(100.0, hidden_reputation + 0.3)
 	ProgressionManager.record_collection(rarity)
@@ -180,6 +183,7 @@ func get_hidden_reputation() -> float:
 	return hidden_reputation
 func _on_day_started(day_number: int) -> void:
 	RandomManager.begin_new_day(day_number)
+	CalendarManager.announce_today()
 	WeatherSystem.begin_new_day(day_number)
 	CollectionManager.refresh_for_day(day_number)
 	RelationshipManager.begin_new_day(day_number)
@@ -262,6 +266,7 @@ func reset_new_game() -> void:
 	ExpeditionManager.reset_new_game()
 	BusinessManager.reset_new_game()
 	FinanceManager.reset_new_game()
+	TreasureManager.reset_new_game()
 	KitchenManager.reset_new_game()
 	TimeSystem.reset_new_game()
 	WeatherSystem.begin_new_day(1)

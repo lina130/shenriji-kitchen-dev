@@ -99,10 +99,11 @@ func _run_trade_cycle(day_index: int) -> void:
 		BusinessManager.sell_goods("flour", mini(5, BusinessManager.get_stock("flour")))
 
 func _collect_all_daily_items() -> void:
-	for area_id in CollectionManager.AREA_POINTS:
-		GameState.energy = GameState.max_energy
-		for spawn in CollectionManager.get_area_spawns(area_id):
-			CollectionManager.collect_spawn(area_id, str(spawn.get("spawn_id", "")))
+	GameState.energy = GameState.max_energy
+	for item_id in ConfigDB.get_rows("collectibles"):
+		if bool(CollectionManager.discovered.get(item_id, false)):
+			continue
+		TreasureManager.force_find("street")
 
 func _run_bank_cycle(day_index: int) -> void:
 	if day_index % 5 == 0 and GameState.money > 3000:

@@ -3,11 +3,22 @@ extends Node2D
 
 var area_id := "home"
 
+var _last_season := ""
+
 func configure(value: String) -> void:
 	area_id = value
+	if not TimeSystem.minute_changed.is_connected(_on_minute_changed):
+		TimeSystem.minute_changed.connect(_on_minute_changed)
 	queue_redraw()
 
+func _on_minute_changed(_minute_of_day: int) -> void:
+	var season := CalendarManager.get_season_id()
+	if season != _last_season:
+		_last_season = season
+		queue_redraw()
+
 func _draw() -> void:
+	_last_season = CalendarManager.get_season_id()
 	match area_id:
 		"home":
 			_draw_home()
@@ -25,8 +36,11 @@ func _draw() -> void:
 			_draw_park()
 		"ruins":
 			_draw_ruins()
+		"bank":
+			_draw_bank()
 		_:
 			draw_rect(Rect2(0, 0, 1280, 720), Color("#17242b"))
+	_draw_season_overlay()
 
 func _draw_home() -> void:
 	draw_rect(Rect2(0, 0, 1280, 720), Color("#c9ad81"))
@@ -72,6 +86,8 @@ func _draw_store() -> void:
 	_draw_floor_grid(Color("#c1ad7b"), 64)
 	_draw_walls(Color("#25464e"))
 	for x in range(60, 1220, 170):
+		if x == 570 or x == 740:
+			continue
 		draw_rect(Rect2(x, 390, 130, 220), Color("#73969a"))
 		draw_line(Vector2(x + 16, 420), Vector2(x + 114, 420), Color("#d9eee7"), 5.0)
 		draw_line(Vector2(x + 16, 462), Vector2(x + 114, 462), Color("#d9eee7"), 5.0)
@@ -99,6 +115,8 @@ func _draw_market() -> void:
 		draw_rect(Rect2(x, 70, 170, 110), Color("#d4745f"))
 		draw_rect(Rect2(x + 20, 92, 130, 66), Color("#f2d18d"))
 	for x in range(100, 1200, 250):
+		if x == 600:
+			continue
 		draw_rect(Rect2(x, 380, 150, 90), Color("#795f45"))
 		draw_rect(Rect2(x + 14, 394, 122, 20), Color("#e5bd69"))
 	draw_line(Vector2(40, 270), Vector2(1240, 270), Color("#8b6c4d"), 3.0)
@@ -125,6 +143,17 @@ func _draw_ruins() -> void:
 	draw_rect(Rect2(0, 0, 1280, 38), Color("#050b0e"))
 	draw_rect(Rect2(0, 682, 1280, 38), Color("#050b0e"))
 
+func _draw_bank() -> void:
+	draw_rect(Rect2(0, 0, 1280, 720), Color("#b8c6c5"))
+	_draw_floor_grid(Color("#a6b5b5"), 64)
+	_draw_walls(Color("#294852"))
+	draw_rect(Rect2(80, 80, 260, 80), Color("#527d8d"))
+	draw_rect(Rect2(940, 80, 260, 80), Color("#527d8d"))
+	draw_rect(Rect2(260, 215, 260, 90), Color("#385f6d"))
+	draw_rect(Rect2(760, 215, 260, 90), Color("#8d6a37"))
+	draw_rect(Rect2(500, 100, 280, 7), Color("#d6cb83"))
+	draw_circle(Vector2(640, 390), 52.0, Color("#7ea6a8"))
+
 func _draw_floor_grid(color: Color, step: int) -> void:
 	for x in range(0, 1281, step):
 		draw_line(Vector2(x, 0), Vector2(x, 720), color, 1.0)
@@ -136,3 +165,28 @@ func _draw_walls(color: Color) -> void:
 	draw_rect(Rect2(0, 688, 1280, 32), color)
 	draw_rect(Rect2(0, 0, 32, 720), color)
 	draw_rect(Rect2(1248, 0, 32, 720), color)
+
+func _draw_season_overlay() -> void:
+	if area_id == "ruins":
+		return
+	match CalendarManager.get_season_id():
+		"spring":
+			for index in range(26):
+				var x := float((index * 137 + 40) % 1240)
+				var y := float((index * 211 + 70) % 640)
+				draw_circle(Vector2(x, y), 3.0, Color(0.98, 0.78, 0.86, 0.55))
+		"summer":
+			for index in range(6):
+				var x := 120.0 + float(index) * 200.0
+				draw_circle(Vector2(x, 120.0), 46.0, Color(1.0, 0.94, 0.68, 0.10))
+		"autumn":
+			for index in range(22):
+				var x := float((index * 173 + 60) % 1220)
+				var y := float((index * 149 + 180) % 520)
+				draw_rect(Rect2(x, y, 9, 5), Color(0.85, 0.52, 0.22, 0.55))
+		"winter":
+			for index in range(34):
+				var x := float((index * 191 + 30) % 1250)
+				var y := float((index * 233 + 50) % 660)
+				draw_circle(Vector2(x, y), 2.4, Color(0.92, 0.96, 1.0, 0.62))
+

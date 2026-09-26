@@ -35,56 +35,16 @@ var discovered: Dictionary = {}
 var total_collected := 0
 var daily_collected := 0
 
-func refresh_for_day(day_number: int) -> void:
+func refresh_for_day(_day_number: int) -> void:
+	## 摸金改为彩蛋式偶遇，由 TreasureManager 掌管，地图上不再固定刷新旧物点。
 	daily_spawns.clear()
 	daily_collected = 0
-	var roll_index := 0
-	for area_id in AREA_POINTS:
-		var area_spawns: Array = []
-		for point in AREA_POINTS[area_id]:
-			var rarity := _roll_rarity()
-			var item_id := _pick_item_for_rarity(rarity)
-			if item_id.is_empty():
-				continue
-			area_spawns.append({
-				"spawn_id": "%s_%d_%d_%d" % [area_id, day_number, roll_index, int(point.x)],
-				"item_id": item_id,
-				"rarity": rarity,
-				"position": point,
-				"collected": false,
-			})
-			roll_index += 1
-		daily_spawns[area_id] = area_spawns
 	changed.emit()
 
-func get_area_spawns(area_id: String) -> Array:
-	var result: Array = []
-	for spawn in daily_spawns.get(area_id, []):
-		if not bool(spawn.get("collected", false)):
-			result.append(spawn)
-	return result
+func get_area_spawns(_area_id: String) -> Array:
+	return []
 
-func collect_spawn(area_id: String, spawn_id: String) -> bool:
-	var spawns: Array = daily_spawns.get(area_id, [])
-	for spawn in spawns:
-		if str(spawn.get("spawn_id", "")) != spawn_id or bool(spawn.get("collected", false)):
-			continue
-		var energy_cost := ConfigDB.get_number("balance", "collection_energy_cost", 2.0)
-		if GameState.energy < energy_cost:
-			NoticeManager.show_message("现在连弯腰翻找的力气都没有了。", "warning")
-			return false
-		GameState.change_energy(-energy_cost)
-		spawn["collected"] = true
-		var item_id := str(spawn.get("item_id", ""))
-		var rarity := str(spawn.get("rarity", "common"))
-		InventoryManager.add_item(item_id, 1)
-		discovered[item_id] = true
-		total_collected += 1
-		daily_collected += 1
-		GameState.on_collection_collected(item_id, rarity)
-		item_collected.emit(item_id, rarity)
-		changed.emit()
-		return true
+func collect_spawn(_area_id: String, _spawn_id: String) -> bool:
 	return false
 
 func sell_collectible(item_id: String) -> bool:
@@ -113,55 +73,27 @@ func get_rarity_name(rarity: String) -> String:
 
 func get_save_data() -> Dictionary:
 	return {
-		"daily_spawns": _serialize_spawns(),
 		"discovered": discovered.duplicate(true),
 		"total_collected": total_collected,
 		"daily_collected": daily_collected,
 	}
 
 func restore(data: Dictionary) -> void:
-	daily_spawns = _deserialize_spawns(data.get("daily_spawns", {}))
+	daily_spawns.clear()
 	discovered = data.get("discovered", {}).duplicate(true)
 	total_collected = int(data.get("total_collected", 0))
 	daily_collected = int(data.get("daily_collected", 0))
 	changed.emit()
 
-
-func _serialize_spawns() -> Dictionary:
-	var result: Dictionary = {}
-	for area_id in daily_spawns:
-		var serialized_area: Array = []
-		for spawn in daily_spawns[area_id]:
-			var copy: Dictionary = spawn.duplicate(true)
-			var point: Vector2 = copy.get("position", Vector2.ZERO)
-			copy["position"] = {"x": point.x, "y": point.y}
-			serialized_area.append(copy)
-		result[area_id] = serialized_area
-	return result
-
-func _deserialize_spawns(saved: Dictionary) -> Dictionary:
-	var result: Dictionary = {}
-	for area_id in saved:
-		var restored_area: Array = []
-		for saved_spawn in saved[area_id]:
-			var spawn: Dictionary = saved_spawn.duplicate(true)
-			var raw_position = spawn.get("position", {"x": 0.0, "y": 0.0})
-			if typeof(raw_position) == TYPE_DICTIONARY:
-				spawn["position"] = Vector2(float(raw_position.get("x", 0.0)), float(raw_position.get("y", 0.0)))
-			else:
-				spawn["position"] = Vector2.ZERO
-			restored_area.append(spawn)
-		result[area_id] = restored_area
-	return result
 func reset_new_game() -> void:
 	daily_spawns.clear()
 	discovered.clear()
 	total_collected = 0
 	daily_collected = 0
-	refresh_for_day(TimeSystem.current_day)
+	changed.emit()
 
 func _roll_rarity() -> String:
-	var luck_bonus := GameState.get_collection_luck_bonus()
+	var luck_bonus := GameState.get_collection_luck_bonus() + CalendarManager.get_collection_bonus()
 	var roll := RandomManager.rng.randf() * 100.0
 	var legendary_threshold := RARITY_WEIGHTS["legendary"] * (1.0 + luck_bonus)
 	var rare_threshold := legendary_threshold + RARITY_WEIGHTS["rare"] * (1.0 + luck_bonus * 0.65)

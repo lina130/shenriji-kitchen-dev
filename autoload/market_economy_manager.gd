@@ -93,7 +93,7 @@ func get_current_price(item_id: String) -> int:
 			modifier -= 0.08
 	modifier += float(stall_tier) * 0.05
 	modifier += minf(0.10, float(reputation) * 0.01)
-	return maxi(1, int(round(base * modifier)))
+	return maxi(1, int(round(base * modifier * (1.0 + RelationshipManager.get_market_bonus()))))
 
 func get_demand_for(item_id: String) -> String:
 	return _demand_for(item_id)

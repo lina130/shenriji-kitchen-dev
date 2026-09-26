@@ -44,6 +44,7 @@ func start_run(requested_site_id: String) -> bool:
 	collected_count = 0
 	estimated_value = 0
 	spawns = _generate_spawns(row)
+	TreasureManager.clear_daily_limit()
 	TimeSystem.set_time_scale(0.05)
 	run_started.emit(site_id)
 	SceneRouter.travel_to("ruins", site_id)
@@ -114,7 +115,8 @@ func get_fog_strength() -> float:
 
 func _generate_spawns(row: Dictionary) -> Dictionary:
 	var generated: Dictionary = {}
-	var count := int(row.get("spawn_count", "8"))
+	# 旧楼里只有极少数位置值得停下翻找，更多旧物要靠日常里的彩蛋式偶遇。
+	var count := clampi(int(row.get("spawn_count", "8")) / 3, 1, 2)
 	var rarity_bonus := float(row.get("rarity_bonus", "0"))
 	for index in range(count):
 		var rarity := _roll_rarity(rarity_bonus)

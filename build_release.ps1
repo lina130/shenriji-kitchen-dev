@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$version = "0.3.0"
+$version = "0.4.0"
 $windowsDir = Join-Path $root "release\windows"
 New-Item -ItemType Directory -Force -Path $windowsDir | Out-Null
 
@@ -24,6 +24,14 @@ if ($LASTEXITCODE -ne 0) { throw "自动测试失败，已停止打包。" }
 Write-Host "运行 100 月经济压力测试..."
 & $godotPath --headless --path $root -- --stress-test
 if ($LASTEXITCODE -ne 0) { throw "经济压力测试失败，已停止打包。" }
+
+Write-Host "运行餐馆与批发实体场景检查..."
+& $godotPath --headless --path $root -- --scene-check
+if ($LASTEXITCODE -ne 0) { throw "实体场景检查失败，已停止打包。" }
+
+Write-Host "运行餐馆与批发可走可点检查..."
+& $godotPath --headless --path $root -- --economy-check
+if ($LASTEXITCODE -ne 0) { throw "经营场景操作检查失败，已停止打包。" }
 
 Write-Host "运行完整经营与收集模拟..."
 & $godotPath --headless --path $root -- --full-simulation
@@ -59,9 +67,9 @@ Esc 暂停或返回
 背包、地图和账本打开时游戏时间仍会继续。
 "@
 Set-Content -LiteralPath (Join-Path $windowsDir "运行说明.txt") -Value $readme -Encoding UTF8
-Copy-Item -LiteralPath (Join-Path $root "docs\RELEASE_NOTES_0.3.0.md") -Destination (Join-Path $windowsDir "发行说明.md") -Force
+Copy-Item -LiteralPath (Join-Path $root "docs\RELEASE_NOTES_0.4.0.md") -Destination (Join-Path $windowsDir "发行说明.md") -Force
 Copy-Item -LiteralPath (Join-Path $root "docs\KNOWN_ISSUES.md") -Destination (Join-Path $windowsDir "已知问题.md") -Force
-Copy-Item -LiteralPath (Join-Path $root "docs\游戏预览_0.3.0.png") -Destination (Join-Path $windowsDir "游戏预览.png") -Force
+Copy-Item -LiteralPath (Join-Path $root "docs\游戏预览_0.4.0.png") -Destination (Join-Path $windowsDir "游戏预览.png") -Force
 
 $exePath = Join-Path $windowsDir "深城日常.exe"
 $latestExePath = Join-Path ([Environment]::GetFolderPath("Desktop")) "深城日常_最新版.exe"

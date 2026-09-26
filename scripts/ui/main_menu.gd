@@ -62,7 +62,7 @@ func _build_interface() -> void:
 	quit_button.pressed.connect(func() -> void: get_tree().quit())
 	content.add_child(quit_button)
 	var version := Label.new()
-	version.text = "深夜食堂经营版 0.3.0  ·  Godot 4.7.2"
+	version.text = "深夜食堂经营版 0.3.1  ·  Godot 4.7.2"
 	version.position = Vector2(24, 670)
 	version.add_theme_color_override("font_color", Color(0.66, 0.75, 0.73, 0.8))
 	_root.add_child(version)

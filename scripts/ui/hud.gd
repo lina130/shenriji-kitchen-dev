@@ -12,6 +12,8 @@ var _status_panel: PanelContainer
 var _money_label: Label
 var _time_label: Label
 var _weather_label: Label
+var _calendar_panel: PanelContainer
+var _calendar_label: Label
 var _context_panel: PanelContainer
 var _context_label: Label
 var _notice_panel: PanelContainer
@@ -128,6 +130,23 @@ func open_bank() -> void:
 	_build_bank_content()
 	_set_modal(ModalState.BANK, "银行与彩票", "存钱、取钱，偶尔买一张彩票试试手气。")
 
+func open_bank_service(service_id: String) -> void:
+	if service_id == "lottery":
+		_build_lottery_content()
+		_set_modal(ModalState.BANK, "街角彩票站", "小赌怡情，但系统不会让你长期稳赚。")
+	else:
+		open_bank()
+
+func _build_lottery_content() -> void:
+	_clear_modal_items()
+	_modal_items.add_child(_make_empty_label("现金 ¥%d · %s" % [GameState.money, FinanceManager.get_lottery_summary()]))
+	_modal_items.add_child(_make_empty_label("一等奖很遥远，小额奖项偶尔能回一点。"))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	_add_action_button(row, "买 1 张", func() -> void: FinanceManager.buy_lottery(1))
+	_add_action_button(row, "买 10 张", func() -> void: FinanceManager.buy_lottery(10))
+	_modal_items.add_child(row)
+
 func open_kitchen() -> void:
 	if not KitchenManager.active:
 		if not KitchenManager.start_shift():
@@ -224,6 +243,17 @@ func _build_interface() -> void:
 	_weather_label.add_theme_color_override("font_color", Color("#a9cbd3"))
 	status_row.add_child(_weather_label)
 
+	_calendar_panel = PanelContainer.new()
+	_calendar_panel.position = Vector2(24, 84)
+	_calendar_panel.size = Vector2(320, 46)
+	_calendar_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_style_panel(_calendar_panel, Color(0.05, 0.07, 0.10, 0.74), Color(0.72, 0.68, 0.95, 0.34))
+	_root.add_child(_calendar_panel)
+	_calendar_label = Label.new()
+	_calendar_label.add_theme_font_size_override("font_size", 17)
+	_calendar_label.add_theme_color_override("font_color", Color("#dcd4f2"))
+	_calendar_panel.add_child(_calendar_label)
+
 	_context_panel = PanelContainer.new()
 	_context_panel.anchor_left = 0.5
 	_context_panel.anchor_right = 0.5
@@ -294,10 +324,15 @@ func _build_interface() -> void:
 	var separator := HSeparator.new()
 	separator.add_theme_color_override("separator", Color(0.75, 0.62, 0.34, 0.38))
 	modal_column.add_child(separator)
+	var modal_scroll := ScrollContainer.new()
+	modal_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	modal_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	modal_scroll.custom_minimum_size = Vector2(0, 350)
+	modal_column.add_child(modal_scroll)
 	_modal_items = VBoxContainer.new()
-	_modal_items.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_modal_items.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_modal_items.add_theme_constant_override("separation", 9)
-	modal_column.add_child(_modal_items)
+	modal_scroll.add_child(_modal_items)
 	var close_button := Button.new()
 	close_button.text = "收起（Esc）"
 	close_button.custom_minimum_size = Vector2(0, 44)
@@ -340,6 +375,7 @@ func _build_shop_content() -> void:
 func _build_market_content() -> void:
 	_clear_modal_items()
 	_modal_items.add_child(_make_empty_label("%s · 已服务 %d 位客人 · 店铺估值 ¥%d" % [BusinessManager.get_business_level_name(), BusinessManager.customers_served, BusinessManager.get_business_valuation()]))
+	_modal_items.add_child(_make_empty_label(RelationshipManager.get_network_effect_text()))
 	var operations := HBoxContainer.new()
 	operations.add_theme_constant_override("separation", 8)
 	_add_action_button(operations, "开始营业", func() -> void: _open_kitchen_from_market())
@@ -433,8 +469,8 @@ func _build_kitchen_content() -> void:
 		_kitchen_recipe_buttons[connected_recipe_id] = recipe_button
 	var support_row := HBoxContainer.new()
 	support_row.add_theme_constant_override("separation", 8)
-	_add_action_button(support_row, "招个帮手 ¥36", func() -> void: BusinessManager.restock_labor())
-	_add_action_button(support_row, "集中缓一缓 ¥30", func() -> void: BusinessManager.restock_brain())
+	_add_action_button(support_row, "招帮手 +3劳力 ¥36", func() -> void: BusinessManager.restock_labor())
+	_add_action_button(support_row, "休整 +3脑力 ¥30", func() -> void: BusinessManager.restock_brain())
 	_add_action_button(support_row, "提前打烊", func() -> void: KitchenManager.end_shift())
 	_kitchen_restart_button = _add_action_button(support_row, "再开一次档", func() -> void: _restart_kitchen())
 	_kitchen_restart_button.visible = false
@@ -455,9 +491,10 @@ func _refresh_kitchen_ui() -> void:
 		_kitchen_restart_button.visible = true
 		return
 	_kitchen_restart_button.visible = false
-	_kitchen_status_label.text = "剩余 %d 秒 · 已出餐 %d/%d · 连击 %d · 劳力 %d · 脑力 %d" % [
+	_kitchen_status_label.text = "剩余 %d 秒 · 已出餐 %d/%d · 连击 %d · 劳力 %d/%d · 脑力 %d/%d" % [
 		int(ceil(KitchenManager.time_left)), KitchenManager.served, KitchenManager.get_order_target(),
-		KitchenManager.combo, BusinessManager.labor_stock, BusinessManager.brain_stock,
+		KitchenManager.combo, BusinessManager.labor_stock, BusinessManager.get_labor_capacity(),
+		BusinessManager.brain_stock, BusinessManager.get_brain_capacity(),
 	]
 	var order_status := KitchenManager.get_orders_status()
 	for index in range(_kitchen_order_labels.size()):
@@ -616,9 +653,13 @@ func _apply_expedition_state() -> void:
 
 func _build_map_content() -> void:
 	_clear_modal_items()
-	var area_text := "出租屋 · 城中村街道 · 工业区工厂 · 街角便利店\n废品回收站 · 旧货市场 · 社区公园"
+	var area_text := "出租屋 · 城中村街道 · 工业区工厂 · 街角便利店 · 银行与彩票站\n废品回收站 · 旧货市场 · 社区公园 · 旧址深处"
 	_modal_items.add_child(_make_empty_label(area_text))
 	_modal_items.add_child(_make_empty_label("今天的天气：%s\n%s" % [WeatherSystem.get_weather_name(), WeatherSystem.get_description()]))
+	var festival := CalendarManager.get_festival()
+	if not festival.is_empty():
+		_modal_items.add_child(_make_empty_label("今天是%s。%s" % [festival.get("name", ""), festival.get("description", "")]))
+	_modal_items.add_child(_make_empty_label(CalendarManager.get_next_festival_text()))
 
 func _build_bank_content() -> void:
 	_clear_modal_items()
@@ -650,7 +691,7 @@ func _build_bank_content() -> void:
 func _build_dialogue_content(line: String) -> void:
 	_clear_modal_items()
 	var relation := Label.new()
-	relation.text = "现在的关系：%s" % RelationshipManager.get_affinity_label(_active_npc_id)
+	relation.text = "现在的关系：%s\n%s" % [RelationshipManager.get_affinity_label(_active_npc_id), RelationshipManager.get_effect_text(_active_npc_id)]
 	relation.add_theme_color_override("font_color", Color("#9fc6bb"))
 	_modal_items.add_child(relation)
 	_modal_items.add_child(_make_empty_label(line))
@@ -755,7 +796,17 @@ func _on_money_changed(amount: int) -> void:
 	_money_label.text = "¥ %d" % amount
 
 func _update_clock() -> void:
-	_time_label.text = "第 %d 天 · %s · %s" % [TimeSystem.current_day, TimeSystem.get_day_name(), TimeSystem.get_time_text()]
+	_time_label.text = "%s · %s · %s" % [CalendarManager.get_calendar_line(), TimeSystem.get_day_name(), TimeSystem.get_time_text()]
+	var festival := CalendarManager.get_festival()
+	if not festival.is_empty():
+		_calendar_label.text = "今天是%s · 营业加成 +%d%%" % [
+			festival.get("name", ""),
+			int(round(CalendarManager.get_business_bonus() * 100.0)),
+		]
+		_calendar_label.add_theme_color_override("font_color", Color("#ffe08a"))
+	else:
+		_calendar_label.text = "%s · %s" % [CalendarManager.get_season_name(), CalendarManager.get_next_festival_text()]
+		_calendar_label.add_theme_color_override("font_color", Color("#dcd4f2"))
 
 func _on_weather_changed(_weather_id: String) -> void:
 	_weather_label.text = WeatherSystem.get_weather_name()
@@ -765,10 +816,26 @@ func _apply_ambient_state() -> void:
 	var night_dim := (1.0 - TimeSystem.get_daylight()) * 0.22
 	var weather_tint := WeatherSystem.get_tint()
 	var weather_alpha := 0.08 if WeatherSystem.current_weather_id in ["rain", "humid", "overcast"] else 0.035
+	var season := CalendarManager.get_season_id()
+	var season_tint := Color(0.0, 0.0, 0.0, 0.0)
+	var season_alpha := 0.0
+	match season:
+		"spring":
+			season_tint = Color(0.42, 0.72, 0.42, 1.0)
+			season_alpha = 0.05
+		"summer":
+			season_tint = Color(0.95, 0.85, 0.45, 1.0)
+			season_alpha = 0.07
+		"autumn":
+			season_tint = Color(0.85, 0.55, 0.25, 1.0)
+			season_alpha = 0.06
+		"winter":
+			season_tint = Color(0.60, 0.72, 0.88, 1.0)
+			season_alpha = 0.07
 	_set_ambient_color(Color(
-		weather_tint.r * 0.25 + 0.018,
-		weather_tint.g * 0.25 + 0.045,
-		weather_tint.b * 0.25 + 0.06,
+		weather_tint.r * 0.25 + season_tint.r * season_alpha + 0.018,
+		weather_tint.g * 0.25 + season_tint.g * season_alpha + 0.045,
+		weather_tint.b * 0.25 + season_tint.b * season_alpha + 0.06,
 		clampf(sleep_dim + night_dim + weather_alpha, 0.0, 0.62)
 	))
 

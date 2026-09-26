@@ -21,6 +21,7 @@ func _run_tests() -> void:
 	_test_clerk_shift()
 	_test_collection_system()
 	_test_weather_system()
+	_test_calendar_and_seasons()
 	_test_relationship_and_gift()
 	_test_study_and_exercise()
 	_test_market_economy()
@@ -29,6 +30,7 @@ func _run_tests() -> void:
 	_test_business_recipes_and_upgrade()
 	_test_kitchen_shift()
 	_test_bank_and_lottery()
+	_test_temp_hire_and_relationship_effects()
 	_test_save_and_load()
 	_test_30_day_cycle()
 
@@ -39,7 +41,8 @@ func _test_initial_state() -> void:
 	_check(is_equal_approx(GameState.energy, 100.0), "初始体力应为满值")
 	_check(TimeSystem.current_day == 1, "初始日期应为第 1 天")
 	_check(TimeSystem.minute_of_day == 420, "初始时间应为 07:00")
-	_check(not CollectionManager.get_area_spawns("street").is_empty(), "街道应生成每日摸金点")
+	_check(CollectionManager.total_collected == 0, "开局不应预置彩蛋旧物")
+	_check(not TreasureManager.get_hint().is_empty(), "旧物册应提示彩蛋是低频相遇")
 	_check(ConfigDB.get_row("weather", WeatherSystem.current_weather_id).size() > 0, "每日天气应来自配置表")
 
 func _test_factory_shift() -> void:
@@ -67,23 +70,39 @@ func _test_clerk_shift() -> void:
 
 func _test_collection_system() -> void:
 	GameState.reset_new_game()
-	var spawns := CollectionManager.get_area_spawns("street")
-	if spawns.is_empty():
-		_check(false, "测试前街道摸金点不应为空")
-		return
-	var spawn: Dictionary = spawns[0]
-	var item_id := str(spawn.get("item_id", ""))
-	var spawn_id := str(spawn.get("spawn_id", ""))
-	var count_before := InventoryManager.get_count(item_id)
-	_check(CollectionManager.collect_spawn("street", spawn_id), "靠近后应能拾取摸金物")
-	_check(InventoryManager.get_count(item_id) == count_before + 1, "摸金物应自动堆叠进背包")
-	_check(bool(CollectionManager.discovered.get(item_id, false)), "拾取后应记入旧物册")
+	_check(_total_collection_spawns() == 0, "城里不应再有固定刷新的摸金点")
+	var item_id := TreasureManager.force_find_once("street")
+	_check(not item_id.is_empty(), "低概率彩蛋应能在街头偶遇一件旧物")
+	_check(InventoryManager.get_count(item_id) >= 1, "偶遇的旧物应自动收进背包")
+	_check(bool(CollectionManager.discovered.get(item_id, false)), "偶遇后应记入旧物册")
+	_check(TreasureManager.get_today_count() == 1, "同一天内彩蛋应被计数")
+	_check(TreasureManager.get_today_count() >= 1, "同一天彩蛋应被计数")
+
+
+func _total_collection_spawns() -> int:
+	var total := 0
+	for area_id in CollectionManager.AREA_POINTS:
+		total += CollectionManager.get_area_spawns(area_id).size()
+	return total
 
 func _test_weather_system() -> void:
 	var row := ConfigDB.get_row("weather", WeatherSystem.current_weather_id)
 	_check(not row.is_empty(), "天气 ID 应能在配置中查到")
 	_check(WeatherSystem.get_collection_bonus() >= 0.0, "天气摸金加成应为非负数")
 	_check(WeatherSystem.get_work_energy_multiplier() >= 1.0, "不同天气应会影响工作体力消耗")
+
+
+func _test_calendar_and_seasons() -> void:
+	TimeSystem.current_day = 1
+	_check(CalendarManager.get_date_text() == "2026年1月1日", "游戏第一天应为 2026 年 1 月 1 日")
+	_check(CalendarManager.get_season_id() == "winter", "一月应属于冬季")
+	_check(CalendarManager.get_festival_name() == "元旦", "第一天应是元旦节日")
+	TimeSystem.current_day = 34
+	_check(CalendarManager.get_festival_name() == "清明节", "第 34 个年历日应为清明节")
+	_check(CalendarManager.get_collection_bonus() > 0.0, "节日应提高彩蛋出现机会")
+	TimeSystem.current_day = 151
+	_check(CalendarManager.get_season_id() == "summer", "六月应属于夏季")
+	_check(is_equal_approx(TimeSystem.REAL_SECONDS_PER_GAME_MINUTE, 1.1), "默认时间流速应放缓到每 1.1 秒一分钟")
 
 func _test_relationship_and_gift() -> void:
 	GameState.reset_new_game()
@@ -133,11 +152,10 @@ func _test_expedition() -> void:
 	_check(MarketEconomyManager.is_site_unlocked("alley_basement"), "旧楼地下室应作为免费入口开放")
 	_check(ExpeditionManager.start_run("alley_basement"), "应能进入旧址探索")
 	_check(ExpeditionManager.active, "进入后探索状态应激活")
-	_check(not ExpeditionManager.get_area_spawns().is_empty(), "旧址内应生成旧物点")
+	_check(not TreasureManager.get_hint().is_empty(), "旧址偶遇应受彩蛋系统控制")
 	_check(is_equal_approx(TimeSystem.time_scale, 0.05), "探索时应放慢生活时间")
-	var spawn: Dictionary = ExpeditionManager.get_area_spawns()[0]
-	var item_id := str(spawn.get("item_id", ""))
-	_check(ExpeditionManager.collect_spawn(str(spawn.get("spawn_id", ""))), "应能拾取旧址旧物")
+	var item_id := TreasureManager.force_find("ruins", "uncommon")
+	_check(not item_id.is_empty(), "旧址偶遇应能摸到一件旧物")
 	_check(InventoryManager.get_count(item_id) >= 1, "旧址旧物应进入背包")
 	ExpeditionManager.end_run("returned")
 	_check(not ExpeditionManager.active, "离开旧址后探索状态应结束")
@@ -222,12 +240,37 @@ func _test_bank_and_lottery() -> void:
 	_check(int(lottery["spent"]) == 10, "一张彩票应固定花费 10 元")
 	_check(GameState.money == money_before_ticket - 10 + int(lottery["won"]), "彩票扣款和中奖应正确入账")
 
+
+func _test_temp_hire_and_relationship_effects() -> void:
+	GameState.reset_new_game()
+	GameState.money = 1000
+	BusinessManager.labor_stock = BusinessManager.get_labor_capacity()
+	var labor_before := BusinessManager.labor_stock
+	var capacity_before := BusinessManager.get_labor_capacity()
+	_check(BusinessManager.restock_labor(), "满劳力时仍应能花钱招临时帮手")
+	_check(BusinessManager.labor_stock == labor_before + 3, "临时帮手应立刻增加劳力库存")
+	_check(BusinessManager.get_labor_capacity() == capacity_before + 3, "临时帮手应增加当天劳力上限")
+	RelationshipManager.affinity["mei"] = 10
+	RelationshipManager.affinity["lin"] = 18
+	_check(RelationshipManager.get_supplier_discount() > 0.0, "熟人关系应提供进货折扣")
+	_check(RelationshipManager.get_market_bonus() > 0.0, "熟客网络应改善旧货成交价")
+	_check(RelationshipManager.get_patience_bonus() > 0.0, "熟客网络应增加订单耐心")
+	_check(RelationshipManager.get_effect_text("lin").contains("老朋友"), "老朋友关系应显示明确经营效果")
+	RelationshipManager.affinity["chen"] = 17
+	RelationshipManager.talked_today.clear()
+	InventoryManager.items.clear()
+	RelationshipManager.talk_to("chen")
+	_check(RelationshipManager.get_affinity("chen") == 18, "持续交谈应达到老朋友阶段")
+	_check(InventoryManager.get_count("brass_compass") == 1, "老朋友阶段应赠送对应稀有旧物")
+
 func _test_save_and_load() -> void:
 	GameState.reset_new_game()
 	GameState.money = 777
 	GameState.energy = 61.0
-	GameState.hidden_luck = 8.0
 	InventoryManager.items.clear()
+	TreasureManager.restore({})
+	var saved_treasure := TreasureManager.force_find("street", "uncommon")
+	GameState.hidden_luck = 8.0
 	InventoryManager.add_item("water", 3)
 	InventoryManager.add_item("vinyl_record", 1)
 	CollectionManager.discovered["vinyl_record"] = true
@@ -259,8 +302,8 @@ func _test_save_and_load() -> void:
 	_check(bool(CollectionManager.discovered.get("vinyl_record", false)), "读档应恢复旧物册")
 	_check(int(RelationshipManager.affinity.get("chen", 0)) == 6, "读档应恢复人物关系")
 	_check(ProgressionManager.study_sessions == 4, "读档应恢复隐藏成长")
-	var restored_spawns := CollectionManager.get_area_spawns("street")
-	_check(not restored_spawns.is_empty() and typeof(restored_spawns[0].get("position")) == TYPE_VECTOR2, "读档后摸金点坐标应保持 Vector2")
+	_check(TreasureManager.get_today_count() == 1, "读档后应恢复当日彩蛋计数")
+	_check(not saved_treasure.is_empty() and bool(CollectionManager.discovered.get(saved_treasure, false)), "读档后应恢复彩蛋旧物")
 	_check(TimeSystem.current_day == 12 and WeatherSystem.current_weather_id == "rain", "读档应恢复时间与天气")
 	_check(MarketEconomyManager.total_sales == 1234 and MarketEconomyManager.stall_tier == 1, "读档应恢复旧货行情进度")
 	_check(ExpeditionManager.site_id == "old_pipe", "读档应恢复旧址记录")

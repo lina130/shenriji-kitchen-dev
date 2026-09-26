@@ -23,6 +23,7 @@ func save_game(show_notice: bool = true) -> bool:
 		"relationships": RelationshipManager.get_save_data(),
 		"market_economy": MarketEconomyManager.get_save_data(),
 		"expedition": ExpeditionManager.get_save_data(),
+		"treasure": TreasureManager.get_save_data(),
 		"business": BusinessManager.get_save_data(),
 		"finance": FinanceManager.get_save_data(),
 	}
@@ -64,6 +65,7 @@ func load_game(show_notice: bool = true) -> bool:
 	RelationshipManager.restore(data.get("relationships", {}))
 	MarketEconomyManager.restore(data.get("market_economy", {}))
 	ExpeditionManager.restore(data.get("expedition", {}))
+	TreasureManager.restore(data.get("treasure", {}))
 	BusinessManager.restore(data.get("business", {}))
 	FinanceManager.restore(data.get("finance", {}))
 	SceneRouter.restore(GameState.current_area, GameState.spawn_id)

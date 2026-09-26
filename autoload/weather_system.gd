@@ -7,9 +7,21 @@ var current_weather_id := "sunny"
 func begin_new_day(_day_number: int) -> void:
 	var choices: Array[String] = []
 	var total_weight := 0.0
+	var season_id := CalendarManager.get_season_id()
+	var festival_hint := CalendarManager.get_weather_hint()
 	for weather_id in ConfigDB.get_rows("weather"):
 		var row := ConfigDB.get_row("weather", weather_id)
 		var weight := float(row.get("weight", "1"))
+		if season_id == "summer" and weather_id == "heat":
+			weight *= 2.8
+		elif season_id == "spring" and weather_id == "rain":
+			weight *= 2.2
+		elif season_id == "autumn" and weather_id == "sunny":
+			weight *= 2.0
+		elif season_id == "winter" and weather_id in ["overcast", "humid"]:
+			weight *= 1.5
+		if festival_hint == weather_id:
+			weight *= 3.0
 		total_weight += weight
 		choices.append(weather_id)
 	var roll := RandomManager.rng.randf() * total_weight

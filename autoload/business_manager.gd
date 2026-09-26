@@ -18,6 +18,8 @@ var trade_profit := 0
 var customers_served := 0
 var reputation := 0
 var last_shift_earned := 0
+var temporary_labor_bonus := 0
+var temporary_brain_bonus := 0
 
 func _ready() -> void:
 	labor_capacity = int(ConfigDB.get_number("business", "labor_base_capacity", 12))
@@ -25,6 +27,8 @@ func _ready() -> void:
 	reset_new_game()
 
 func begin_new_day(_day_number: int) -> void:
+	temporary_labor_bonus = 0
+	temporary_brain_bonus = 0
 	labor_stock = mini(get_labor_capacity(), labor_stock + int(ConfigDB.get_number("business", "labor_daily_restore", 6)))
 	brain_stock = mini(get_brain_capacity(), brain_stock + int(ConfigDB.get_number("business", "brain_daily_restore", 5)))
 	_update_daily_prices()
@@ -62,46 +66,49 @@ func sell_goods(goods_id: String, quantity: int = 1) -> bool:
 	trade_profit += proceeds - int(round(cost_basis))
 	total_revenue += proceeds
 	GameState.earn(proceeds, "出手 %d 份%s，收到 ¥%d。" % [quantity, ConfigDB.get_row("goods", goods_id).get("name", goods_id), proceeds])
+	TreasureManager.try_trigger("sell_goods")
 	changed.emit()
 	return true
 
 func restock_labor() -> bool:
-	var capacity := get_labor_capacity()
-	if labor_stock >= capacity:
-		NoticeManager.show_message("今天的人手已经排满了。", "hint")
+	if temporary_labor_bonus >= 6:
+		NoticeManager.show_message("临时帮手已经够多了，再多也安排不开。", "hint")
 		return false
 	var cost := int(ConfigDB.get_number("business", "labor_restock_cost", 36))
 	if not GameState.spend(cost):
 		return false
-	labor_stock = mini(capacity, labor_stock + int(ConfigDB.get_number("business", "labor_restock_size", 3)))
+	var amount := int(ConfigDB.get_number("business", "labor_restock_size", 3))
+	temporary_labor_bonus += amount
+	labor_stock += amount
 	total_cost += cost
-	NoticeManager.show_message("临时帮手到了，劳力库存增加。", "positive")
+	NoticeManager.show_message("临时帮手到了，今天的劳力上限增加。", "positive")
 	changed.emit()
 	return true
 
 func restock_brain() -> bool:
-	var capacity := get_brain_capacity()
-	if brain_stock >= capacity:
-		NoticeManager.show_message("现在脑子很清醒，不需要再灌咖啡了。", "hint")
+	if temporary_brain_bonus >= 6:
+		NoticeManager.show_message("今天已经缓过来了，再喝只会睡不着。", "hint")
 		return false
 	var cost := int(ConfigDB.get_number("business", "brain_restock_cost", 30))
 	if not GameState.spend(cost):
 		return false
-	brain_stock = mini(capacity, brain_stock + int(ConfigDB.get_number("business", "brain_restock_size", 3)))
+	var amount := int(ConfigDB.get_number("business", "brain_restock_size", 3))
+	temporary_brain_bonus += amount
+	brain_stock += amount
 	total_cost += cost
 	NoticeManager.show_message("坐下来喘口气，脑力库存增加。", "positive")
 	changed.emit()
 	return true
 
 func get_labor_capacity() -> int:
-	return int(ConfigDB.get_number("business", "labor_base_capacity", 12)) + business_level * 4
+	return int(ConfigDB.get_number("business", "labor_base_capacity", 12)) + business_level * 4 + temporary_labor_bonus
 
 func get_brain_capacity() -> int:
-	return int(ConfigDB.get_number("business", "brain_base_capacity", 10)) + business_level * 2
+	return int(ConfigDB.get_number("business", "brain_base_capacity", 10)) + business_level * 2 + temporary_brain_bonus
 
 func get_buy_price(goods_id: String) -> int:
 	var base := float(ConfigDB.get_row("goods", goods_id).get("base_cost", "1"))
-	return maxi(1, int(round(base * (1.0 + float(price_modifiers.get(goods_id, 0.0))))))
+	return maxi(1, int(round(base * (1.0 + float(price_modifiers.get(goods_id, 0.0))) * (1.0 - RelationshipManager.get_supplier_discount()))))
 
 func get_sell_price(goods_id: String) -> int:
 	var base := float(ConfigDB.get_row("goods", goods_id).get("base_cost", "1"))
@@ -196,7 +203,8 @@ func register_recipe_sale(recipe_id: String, combo: int) -> int:
 	var combo_multiplier := 1.0 + maxf(0.0, float(combo - 1)) * 0.06
 	var level_multiplier := 1.0 + float(business_level) * 0.05
 	var weather_multiplier := 1.0 + maxf(0.0, WeatherSystem.get_store_sales_bonus() - 1.0) * 0.25
-	var revenue := int(round(base_revenue * combo_multiplier * level_multiplier * weather_multiplier))
+	var festival_multiplier := 1.0 + CalendarManager.get_business_bonus()
+	var revenue := int(round(base_revenue * combo_multiplier * level_multiplier * weather_multiplier * festival_multiplier))
 	total_revenue += revenue
 	customers_served += 1
 	reputation = mini(999, reputation + 1)
@@ -327,6 +335,8 @@ func get_save_data() -> Dictionary:
 		"trade_profit": trade_profit,
 		"customers_served": customers_served,
 		"reputation": reputation,
+		"temporary_labor_bonus": temporary_labor_bonus,
+		"temporary_brain_bonus": temporary_brain_bonus,
 	}
 
 func restore(data: Dictionary) -> void:
@@ -342,6 +352,8 @@ func restore(data: Dictionary) -> void:
 	trade_profit = int(data.get("trade_profit", 0))
 	customers_served = int(data.get("customers_served", 0))
 	reputation = int(data.get("reputation", 0))
+	temporary_labor_bonus = int(data.get("temporary_labor_bonus", 0))
+	temporary_brain_bonus = int(data.get("temporary_brain_bonus", 0))
 	labor_capacity = get_labor_capacity()
 	brain_capacity = get_brain_capacity()
 	changed.emit()
@@ -354,6 +366,8 @@ func reset_new_game() -> void:
 	customers_served = 0
 	reputation = 0
 	last_shift_earned = 0
+	temporary_labor_bonus = 0
+	temporary_brain_bonus = 0
 	_set_starter_stock()
 	labor_capacity = get_labor_capacity()
 	brain_capacity = get_brain_capacity()

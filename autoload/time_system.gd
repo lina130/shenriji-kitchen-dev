@@ -6,7 +6,8 @@ signal late_night_reached
 signal paused_changed(is_paused: bool)
 
 const MINUTES_PER_DAY := 1440
-const REAL_SECONDS_PER_GAME_MINUTE := 0.1
+const REAL_SECONDS_PER_GAME_MINUTE := 1.1
+const MAX_TIME_SCALE := 2.0
 
 var current_day := 1
 var minute_of_day := 7 * 60
@@ -60,7 +61,7 @@ func reset_new_game() -> void:
 	paused_changed.emit(false)
 
 func set_time_scale(value: float) -> void:
-	time_scale = clampf(value, 0.01, 4.0)
+	time_scale = clampf(value, 0.02, MAX_TIME_SCALE)
 
 func set_paused(value: bool) -> void:
 	if paused == value:
@@ -76,7 +77,7 @@ func get_time_text() -> String:
 	return "%02d:%02d" % [minute_of_day / 60, minute_of_day % 60]
 
 func get_period_name() -> String:
-	var hour := minute_of_day / 60
+	var hour := int(minute_of_day / 60)
 	if hour < 6:
 		return "深夜"
 	if hour < 9:
@@ -128,7 +129,7 @@ func restore(data: Dictionary) -> void:
 	_minute_accumulator = 0.0
 	_late_night_reported = minute_of_day >= 120
 	paused = bool(data.get("paused", false))
-	time_scale = clampf(float(data.get("time_scale", 1.0)), 0.01, 4.0)
+	time_scale = clampf(float(data.get("time_scale", 1.0)), 0.02, MAX_TIME_SCALE)
 	day_started.emit(current_day)
 	minute_changed.emit(minute_of_day)
 	paused_changed.emit(paused)

@@ -96,6 +96,33 @@ func advance_station(station_index: int) -> bool:
 			NoticeManager.show_message("还没到下一步，盯紧工位。", "hint")
 			return false
 
+
+func prepare_next_order(station_index: int) -> bool:
+	if orders.is_empty():
+		_spawn_order()
+	if orders.is_empty():
+		return false
+	return place_recipe(str(orders[0].get("recipe_id", "")), station_index)
+
+func handle_station_action(station_index: int) -> bool:
+	if not active or station_index < 0 or station_index >= stations.size():
+		NoticeManager.show_message("档口还没开张。", "warning")
+		return false
+	var state := str(stations[station_index].get("state", "idle"))
+	if state == "idle":
+		return prepare_next_order(station_index)
+	if state == "ready":
+		NoticeManager.show_message("菜已经装好了，端到出餐台再送客。", "hint")
+		return false
+	return advance_station(station_index)
+
+func serve_ready_station() -> bool:
+	for index in range(stations.size()):
+		if str(stations[index].get("state", "idle")) == "ready":
+			return _serve_station(index)
+	NoticeManager.show_message("还没有装好盘的菜。", "hint")
+	return false
+
 func _serve_station(station_index: int) -> bool:
 	var station: Dictionary = stations[station_index]
 	var recipe_id := str(station.get("recipe_id", ""))
@@ -120,6 +147,7 @@ func _serve_station(station_index: int) -> bool:
 	station["progress"] = 0.0
 	station["duration"] = 0.0
 	served += 1
+	TreasureManager.try_trigger("serve_dish")
 	_spawn_order()
 	if served >= get_order_target():
 		end_shift()
@@ -224,7 +252,7 @@ func _spawn_order() -> void:
 	orders.append({
 		"id": _order_counter,
 		"recipe_id": str(RandomManager.pick(candidates)),
-		"patience": maxf(8.0, 20.0 - float(_order_counter) * 0.25),
+		"patience": maxf(8.0, 20.0 - float(_order_counter) * 0.25) + RelationshipManager.get_patience_bonus(),
 	})
 
 func _find_matching_order(recipe_id: String) -> int:

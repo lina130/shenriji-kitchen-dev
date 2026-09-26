@@ -19,6 +19,14 @@ func _ready() -> void:
 		var playtest_script := load("res://tests/playtest_runner.gd")
 		add_child(playtest_script.new())
 		return
+	if "--economy-check" in OS.get_cmdline_user_args():
+		var economy_check_script := load("res://tests/economy_check.gd")
+		add_child(economy_check_script.new())
+		return
+	if "--scene-check" in OS.get_cmdline_user_args():
+		var scene_check_script := load("res://tests/scene_check.gd")
+		add_child(scene_check_script.new())
+		return
 	if "--stress-test" in OS.get_cmdline_user_args():
 		var stress_script := load("res://tests/stress_test.gd")
 		add_child(stress_script.new())
@@ -32,8 +40,14 @@ func _ready() -> void:
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--capture-preview="):
 			capture_path = argument.trim_prefix("--capture-preview=")
+	var capture_area := ""
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--capture-area="):
+			capture_area = argument.trim_prefix("--capture-area=")
 	if not capture_path.is_empty():
 		_start_new_game()
+		if not capture_area.is_empty():
+			SceneRouter.travel_to(capture_area, "entrance")
 		_capture_preview.call_deferred(capture_path)
 	else:
 		_show_main_menu()
@@ -65,6 +79,7 @@ func _enter_game() -> void:
 	world.npc_requested.connect(hud.open_dialogue)
 	world.market_requested.connect(hud.open_market)
 	world.expedition_map_requested.connect(hud.open_expedition_map)
+	world.bank_requested.connect(hud.open_bank_service)
 	hud.modal_changed.connect(_on_modal_changed)
 	hud.return_to_menu_requested.connect(_show_main_menu)
 	GameState.monthly_summary_ready.connect(hud.show_month_summary)

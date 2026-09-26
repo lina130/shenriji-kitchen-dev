@@ -1,0 +1,14 @@
+calendar_day,name,type,description,business_bonus,collection_bonus,weather_hint
+1,元旦,festival,新年的第一天，街上换了新的日历。,0.08,0.02,cool
+15,元宵节,festival,街区挂起灯笼，夜里比平时热闹。,0.10,0.03,clear
+34,清明节,festival,细雨和旧事一起落下来。,0.03,0.08,rain
+75,劳动节,festival,假期开始，餐饮和出行都更热闹。,0.15,0.02,clear
+95,端午节,festival,街坊开始包粽子，江边风里有艾草香。,0.12,0.04,humid
+150,儿童节,festival,小店多了些带孩子来吃饭的客人。,0.10,0.02,clear
+165,夏至,festival,白天长得像不会结束，冰饮卖得很快。,0.14,0.01,heat
+225,中秋节,festival,月饼和柚子摆在柜台最显眼的位置。,0.16,0.05,clear
+240,国庆节,festival,长假让整座城市慢下来，商圈反而更忙。,0.20,0.04,clear
+270,重阳节,festival,老人结伴登高，旧货市场也多了念旧的人。,0.08,0.06,cool
+300,双十一,festival,网购节和夜市一起把街道点亮。,0.18,0.03,clear
+330,冬至,festival,热汤和饺子的味道从巷口飘出来。,0.12,0.04,cool
+360,跨年夜,festival,一年的最后一晚，霓虹会亮到很晚。,0.22,0.06,clear

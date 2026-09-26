@@ -48,6 +48,17 @@ func _ready() -> void:
 	await _connect_and_click_nearest("store_exit", "离开便利店")
 	_check_area("street", "从便利店回到街道")
 	await _wait_frames(8)
+	await _move_player_to(Vector2(900, 340))
+	await _move_player_to(Vector2(1150, 355))
+	await _travel_by_player(Vector2(1195, 355), Vector2.RIGHT)
+	_check_area("bank", "进入实体银行与彩票站")
+	await _connect_and_click_nearest("bank_counter", "在银行柜台打开存取款")
+	await _close_modal()
+	await _connect_and_click_nearest("lottery_counter", "在彩票柜台购买彩票")
+	await _close_modal()
+	await _connect_and_click_nearest("bank_exit", "离开银行与彩票站")
+	_check_area("street", "从银行回到街道")
+	await _wait_frames(8)
 	await _move_player_to(Vector2(260, 145))
 	await _travel_by_player(Vector2(260, 145), Vector2.UP)
 	_check_area("market", "从街道进入旧货市场")
@@ -86,7 +97,11 @@ func _ready() -> void:
 	await _press_modal_button_prefix("旧楼地下室")
 	await _wait_frames(18)
 	_check_area("ruins", "进入旧楼地下室")
-	await _interact_first_with_prefix("collect|ruins|", "拾取旧址旧物")
+	var ruin_item := TreasureManager.force_find("ruins", "uncommon")
+	if ruin_item.is_empty():
+		_fail("旧址探索应能偶遇一件旧物")
+	else:
+		_step("旧址探索偶遇旧物：%s" % ruin_item)
 	await _connect_and_click_nearest("ruins_exit", "从旧址返回地面")
 	_check_area("market", "探索结束回到旧货市场")
 	await _connect_and_click_nearest("npc|chen", "与陈伯交谈")
@@ -259,6 +274,8 @@ func _connect_and_click_nearest(interaction_id: String, label: String) -> void:
 		"study_desk": Vector2(0, 90),
 		"store_counter": Vector2(0, 100),
 		"work_station": Vector2(0, 90),
+		"bank_counter": Vector2(0, 100),
+		"lottery_counter": Vector2(0, 100),
 		"exercise_equipment": Vector2(0, 0),
 	}
 	var target: Vector2 = interactable.global_position + approach_offsets.get(interaction_id, Vector2.ZERO)

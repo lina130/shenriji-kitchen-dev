@@ -13,7 +13,7 @@ study_energy_cost,10,energy,单次学习基础体力消耗
 exercise_minutes,90,minute,单次锻炼时长
 exercise_energy_cost,18,energy,单次锻炼基础体力消耗
 collection_energy_cost,2,energy,单次摸金基础体力消耗
-daily_collection_points,16,point,全城每日基础刷新点数量
+daily_collection_points,3,point,全城每日基础彩蛋刷新点
 stall_upgrade_1_cost,900,yuan,固定摊位投入
 stall_upgrade_2_cost,2400,yuan,小铺面投入
 consignment_base_slots,2,slot,寄卖基础容量

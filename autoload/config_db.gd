@@ -14,6 +14,7 @@ func _ready() -> void:
 	_load_table("recipes", "res://data/recipes.csv", "recipe_id")
 	_load_table("business", "res://data/business.csv", "key")
 	_load_table("bank", "res://data/bank.csv", "key")
+	_load_table("calendar", "res://data/calendar.csv", "calendar_day")
 
 func get_rows(table_name: String) -> Dictionary:
 	return tables.get(table_name, {})
