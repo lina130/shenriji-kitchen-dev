@@ -64,6 +64,8 @@ Copy-Item -LiteralPath (Join-Path $root "docs\KNOWN_ISSUES.md") -Destination (Jo
 Copy-Item -LiteralPath (Join-Path $root "docs\游戏预览_0.3.0.png") -Destination (Join-Path $windowsDir "游戏预览.png") -Force
 
 $exePath = Join-Path $windowsDir "深城日常.exe"
+$latestExePath = Join-Path ([Environment]::GetFolderPath("Desktop")) "深城日常_最新版.exe"
+Copy-Item -LiteralPath $exePath -Destination $latestExePath -Force
 $hash = Get-FileHash -LiteralPath $exePath -Algorithm SHA256
 $hashLine = "$($hash.Hash)  深城日常.exe"
 Set-Content -LiteralPath (Join-Path $root "release\SHA256SUMS.txt") -Value $hashLine -Encoding utf8
@@ -80,3 +82,4 @@ Compress-Archive -Path $releaseFiles -DestinationPath $zipPath -Force
 $zipHash = Get-FileHash -LiteralPath $zipPath -Algorithm SHA256
 Add-Content -LiteralPath (Join-Path $root "release\SHA256SUMS.txt") -Value "$($zipHash.Hash)  深城日常_${version}_win64.zip"
 Write-Host "发布包完成：$zipPath"
+Write-Host "桌面最新版：$latestExePath"

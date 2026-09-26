@@ -63,6 +63,7 @@ func _ready() -> void:
 	await _press_modal_button_prefix("卖1")
 	await _close_modal()
 	await _connect_and_click_nearest("market_stall", "重新打开经营台")
+	await _assert_modal_button_stable("开始营业", 0.6, "经营按钮刷新时保持可点击")
 	await _press_modal_button_prefix("开始营业")
 	await _wait_frames(18)
 	KitchenManager.orders[0]["recipe_id"] = "egg_rice"
@@ -180,6 +181,19 @@ func _wait_seconds(seconds: float) -> void:
 	while elapsed < seconds:
 		await get_tree().process_frame
 		elapsed += get_process_delta_time()
+
+
+func _assert_modal_button_stable(prefix: String, wait_time: float, label: String) -> void:
+	var before = _find_button_prefix(main.hud._modal_items, prefix)
+	if before == null:
+		_fail("找不到待验证按钮：%s" % prefix)
+		return
+	await _wait_seconds(wait_time)
+	var after = _find_button_prefix(main.hud._modal_items, prefix)
+	if after == null or before.get_instance_id() != after.get_instance_id():
+		_fail("按钮在刷新时被重建：%s" % prefix)
+	else:
+		_step(label)
 
 func _press_modal_button_prefix(prefix: String) -> void:
 	var button = _find_button_prefix(main.hud._modal_items, prefix)

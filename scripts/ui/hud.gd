@@ -28,6 +28,10 @@ var _kitchen_orders_box: VBoxContainer
 var _kitchen_stations_box: VBoxContainer
 var _kitchen_recipes_box: VBoxContainer
 var _kitchen_status_label: Label
+var _kitchen_station_buttons: Array[Button] = []
+var _kitchen_recipe_buttons: Dictionary = {}
+var _kitchen_order_labels: Array[Label] = []
+var _kitchen_restart_button: Button
 var _active_npc_id := ""
 
 func _ready() -> void:
@@ -397,53 +401,89 @@ func _build_kitchen_content() -> void:
 	_modal_items.add_child(_kitchen_status_label)
 	_kitchen_orders_box = VBoxContainer.new()
 	_modal_items.add_child(_kitchen_orders_box)
+	_kitchen_orders_box.add_child(_make_empty_label("等待订单："))
+	_kitchen_order_labels.clear()
+	for index in range(4):
+		var order_label := Label.new()
+		order_label.visible = false
+		_kitchen_orders_box.add_child(order_label)
+		_kitchen_order_labels.append(order_label)
 	_kitchen_stations_box = VBoxContainer.new()
 	_modal_items.add_child(_kitchen_stations_box)
+	_kitchen_stations_box.add_child(_make_empty_label("工位："))
+	_kitchen_station_buttons.clear()
+	for index in range(4):
+		var station_button := Button.new()
+		station_button.custom_minimum_size = Vector2(0, 48)
+		station_button.visible = false
+		station_button.pressed.connect(_on_kitchen_station.bind(index))
+		_kitchen_stations_box.add_child(station_button)
+		_kitchen_station_buttons.append(station_button)
 	_kitchen_recipes_box = VBoxContainer.new()
 	_modal_items.add_child(_kitchen_recipes_box)
+	_kitchen_recipes_box.add_child(_make_empty_label("菜单（点一下放进空闲工位）："))
+	_kitchen_recipe_buttons.clear()
+	for recipe_id in BusinessManager.get_recipe_ids():
+		var recipe_button := Button.new()
+		var connected_recipe_id := str(recipe_id)
+		recipe_button.custom_minimum_size = Vector2(0, 44)
+		recipe_button.visible = false
+		recipe_button.pressed.connect(_on_kitchen_place.bind(connected_recipe_id))
+		_kitchen_recipes_box.add_child(recipe_button)
+		_kitchen_recipe_buttons[connected_recipe_id] = recipe_button
 	var support_row := HBoxContainer.new()
 	support_row.add_theme_constant_override("separation", 8)
 	_add_action_button(support_row, "招个帮手 ¥36", func() -> void: BusinessManager.restock_labor())
 	_add_action_button(support_row, "集中缓一缓 ¥30", func() -> void: BusinessManager.restock_brain())
 	_add_action_button(support_row, "提前打烊", func() -> void: KitchenManager.end_shift())
+	_kitchen_restart_button = _add_action_button(support_row, "再开一次档", func() -> void: _restart_kitchen())
+	_kitchen_restart_button.visible = false
 	_modal_items.add_child(support_row)
 	_refresh_kitchen_ui()
 
 func _refresh_kitchen_ui() -> void:
-	if not is_instance_valid(_kitchen_orders_box):
+	if not is_instance_valid(_kitchen_status_label):
 		return
 	if not KitchenManager.active:
 		_kitchen_status_label.text = "今日营业已结束。"
-		_clear_children(_kitchen_orders_box)
-		_clear_children(_kitchen_stations_box)
-		_clear_children(_kitchen_recipes_box)
-		_add_action_button(_kitchen_orders_box, "再开一次档", func() -> void: _restart_kitchen())
+		for button in _kitchen_station_buttons:
+			button.visible = false
+		for button in _kitchen_recipe_buttons.values():
+			button.visible = false
+		for label in _kitchen_order_labels:
+			label.visible = false
+		_kitchen_restart_button.visible = true
 		return
+	_kitchen_restart_button.visible = false
 	_kitchen_status_label.text = "剩余 %d 秒 · 已出餐 %d/%d · 连击 %d · 劳力 %d · 脑力 %d" % [
 		int(ceil(KitchenManager.time_left)), KitchenManager.served, KitchenManager.get_order_target(),
 		KitchenManager.combo, BusinessManager.labor_stock, BusinessManager.brain_stock,
 	]
-	_clear_children(_kitchen_orders_box)
-	_clear_children(_kitchen_stations_box)
-	_clear_children(_kitchen_recipes_box)
-	_kitchen_orders_box.add_child(_make_empty_label("等待订单："))
-	for order in KitchenManager.get_orders_status():
-		_kitchen_orders_box.add_child(_make_empty_label("%s · 耐心 %d 秒" % [order["name"], int(ceil(float(order["patience"])))]))
-	_kitchen_stations_box.add_child(_make_empty_label("工位："))
-	for station in KitchenManager.get_stations_status():
-		var button := Button.new()
-		button.custom_minimum_size = Vector2(0, 48)
-		button.text = "工位 %d · %s · %s · %d%%" % [int(station["index"]) + 1, station["name"], station["action_text"], int(float(station["progress_ratio"]) * 100.0)]
-		button.pressed.connect(_on_kitchen_station.bind(int(station["index"])))
-		_kitchen_stations_box.add_child(button)
-	_kitchen_recipes_box.add_child(_make_empty_label("菜单（点一下放进空闲工位）："))
+	var order_status := KitchenManager.get_orders_status()
+	for index in range(_kitchen_order_labels.size()):
+		if index < order_status.size():
+			var order: Dictionary = order_status[index]
+			_kitchen_order_labels[index].visible = true
+			_kitchen_order_labels[index].text = "%s · 耐心 %d 秒" % [order["name"], int(ceil(float(order["patience"])))]
+		else:
+			_kitchen_order_labels[index].visible = false
+	var station_status := KitchenManager.get_stations_status()
+	for index in range(_kitchen_station_buttons.size()):
+		if index < station_status.size():
+			var station: Dictionary = station_status[index]
+			_kitchen_station_buttons[index].visible = true
+			_kitchen_station_buttons[index].text = "工位 %d · %s · %s · %d%%" % [index + 1, station["name"], station["action_text"], int(float(station["progress_ratio"]) * 100.0)]
+		else:
+			_kitchen_station_buttons[index].visible = false
+	var unlocked := BusinessManager.get_unlocked_recipe_ids()
 	for recipe in KitchenManager.get_recipes_status():
-		var button := Button.new()
-		button.custom_minimum_size = Vector2(0, 44)
+		var recipe_id := str(recipe["id"])
+		var button: Button = _kitchen_recipe_buttons.get(recipe_id)
+		if button == null:
+			continue
+		button.visible = recipe_id in unlocked
 		button.text = "%s ¥%d · %s · 劳力%d 脑力%d" % [recipe["name"], int(recipe["sale_price"]), recipe["goods_recipe"], int(recipe["labor_cost"]), int(recipe["brain_cost"])]
 		button.disabled = not bool(recipe["available"]) or _first_idle_station() < 0
-		button.pressed.connect(_on_kitchen_place.bind(str(recipe["id"])))
-		_kitchen_recipes_box.add_child(button)
 
 func _restart_kitchen() -> void:
 	if KitchenManager.start_shift():
