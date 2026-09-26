@@ -1,0 +1,43 @@
+; 《深城日常》 Godot 工程配置
+; 引擎基线：Godot 4.2+，当前便携开发版 4.7.2 stable
+
+config_version=5
+
+[application]
+
+config/name="深城日常"
+config/description="无任务、无数值面板的深圳都市生活模拟游戏。"
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.2", "GL Compatibility")
+boot_splash/bg_color=Color(0.055, 0.067, 0.078, 1)
+boot_splash/show_image=false
+config/icon="res://icon.svg"
+
+[autoload]
+
+InputSetup="*res://autoload/input_setup.gd"
+ConfigDB="*res://autoload/config_db.gd"
+RandomManager="*res://autoload/random_manager.gd"
+InventoryManager="*res://autoload/inventory_manager.gd"
+NoticeManager="*res://autoload/notice_manager.gd"
+TimeSystem="*res://autoload/time_system.gd"
+GameState="*res://autoload/game_state.gd"
+SceneRouter="*res://autoload/scene_router.gd"
+SaveManager="*res://autoload/save_manager.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+window/size/window_width_override=1280
+window/size/window_height_override=720
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
+textures/canvas_textures/default_texture_filter=0
+environment/defaults/default_clear_color=Color(0.055, 0.067, 0.078, 1)

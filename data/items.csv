@@ -1,0 +1,5 @@
+item_id,name,description,kind,price,usable,energy
+meal_rice,热乎叉烧饭,街口快餐店的味道，吃完踏实。,food,15,true,38
+water,矿泉水,普通但可靠，口渴时很需要。,drink,3,true,5
+coffee,冰美式,深圳打工人的临时清醒。,drink,12,true,16
+bread,菠萝包,刚出炉，边走边吃正好。,food,6,true,18

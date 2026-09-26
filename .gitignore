@@ -1,0 +1,25 @@
+# Godot generated files
+.godot/
+*.tmp
+*.translation
+
+# Local tools and exports
+.tools/
+build/
+exports/
+*.exe
+*.pck
+*.zip
+
+# Local saves / IDE files
+*.log
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Keep project structure available in Git
+!assets/**/.gitkeep
+# Godot CSV translation side effects
+data/*.translation
+data/*.csv.import
