@@ -6,7 +6,7 @@ var _current_track := ""
 var _audio_disabled := false
 
 func _ready() -> void:
-	_audio_disabled = "--smoke-test" in OS.get_cmdline_user_args() or "--stress-test" in OS.get_cmdline_user_args()
+	_audio_disabled = "--smoke-test" in OS.get_cmdline_user_args() or "--stress-test" in OS.get_cmdline_user_args() or "--full-simulation" in OS.get_cmdline_user_args()
 	_music_player = AudioStreamPlayer.new()
 	_music_player.bus = "Master"
 	_music_player.volume_db = -8.0

@@ -25,6 +25,10 @@ func _run_tests() -> void:
 	_test_study_and_exercise()
 	_test_market_economy()
 	_test_expedition()
+	_test_business_trade()
+	_test_business_recipes_and_upgrade()
+	_test_kitchen_shift()
+	_test_bank_and_lottery()
 	_test_save_and_load()
 	_test_30_day_cycle()
 
@@ -140,6 +144,84 @@ func _test_expedition() -> void:
 	_check(GameState.current_area == "market", "离开旧址应回到旧货市场")
 	_check(is_equal_approx(TimeSystem.time_scale, 1.0), "离开旧址后时间速度应恢复")
 
+
+func _test_business_trade() -> void:
+	GameState.reset_new_game()
+	BusinessManager.price_modifiers["egg"] = -0.15
+	var buy_price := BusinessManager.get_buy_price("egg")
+	GameState.money = 1000
+	_check(BusinessManager.buy_goods("egg", 5), "低价时应该能买入鸡蛋")
+	_check(BusinessManager.get_stock("egg") == 9, "买入后鸡蛋库存应增加")
+	BusinessManager.price_modifiers["egg"] = 0.15
+	var money_before_sale := GameState.money
+	_check(BusinessManager.sell_goods("egg", 5), "高价时应该能卖出库存鸡蛋")
+	_check(GameState.money > money_before_sale, "买低卖高应产生现金收益")
+	_check(BusinessManager.trade_profit > 0, "价差交易应记录正收益")
+	BusinessManager.goods_stock.clear()
+	BusinessManager.average_cost.clear()
+	BusinessManager.price_modifiers["egg"] = 0.18
+	BusinessManager.buy_goods("egg", 5)
+	BusinessManager.price_modifiers["egg"] = -0.18
+	var profit_before_loss := BusinessManager.trade_profit
+	BusinessManager.sell_goods("egg", 5)
+	_check(BusinessManager.trade_profit < profit_before_loss, "高位买入后低位卖出应产生亏损可能")
+
+func _test_business_recipes_and_upgrade() -> void:
+	GameState.reset_new_game()
+	BusinessManager.labor_stock = 10
+	BusinessManager.brain_stock = 10
+	BusinessManager.goods_stock = {"rice": 3, "egg": 4}
+	_check(BusinessManager.consume_recipe_inputs("egg_rice"), "蛋炒饭应能消耗食材、劳力和脑力")
+	_check(BusinessManager.get_stock("rice") == 2 and BusinessManager.get_stock("egg") == 2, "做菜应按配方扣减库存")
+	_check(BusinessManager.labor_stock == 9 and BusinessManager.brain_stock == 9, "做菜应扣减劳力和脑力")
+	var revenue := BusinessManager.register_recipe_sale("egg_rice", 2)
+	_check(revenue > 0, "出餐应产生销售收入")
+	BusinessManager.customers_served = 12
+	GameState.money = 2000
+	_check(BusinessManager.upgrade_business(), "达到客流条件后应能扩大店面")
+	_check(BusinessManager.business_level == 1, "店面应升级到固定档口")
+
+func _test_kitchen_shift() -> void:
+	GameState.reset_new_game()
+	BusinessManager.goods_stock = {"rice": 4, "egg": 8, "greens": 4, "tea": 4, "lemon": 6, "ice": 4}
+	BusinessManager.labor_stock = 12
+	BusinessManager.brain_stock = 12
+	var money_before := GameState.money
+	_check(KitchenManager.start_shift(), "有库存时应能开始营业")
+	_check(KitchenManager.active and KitchenManager.orders.size() >= 3, "营业开始时应有订单")
+	_check(KitchenManager.place_recipe("egg_rice", 0), "菜单应能放进空闲工位并消耗库存")
+	var station: Dictionary = KitchenManager.stations[0]
+	station["progress"] = station["duration"]
+	KitchenManager._update_stations(0.0)
+	_check(str(station["state"]) == "prep_ready", "备料完成后应等待玩家下锅")
+	_check(KitchenManager.advance_station(0), "点击工位应进入下锅阶段")
+	station["progress"] = station["duration"]
+	KitchenManager._update_stations(0.0)
+	_check(str(station["state"]) == "cook_ready", "炒制完成后应等待玩家装盘")
+	_check(KitchenManager.advance_station(0), "点击工位应完成装盘")
+	KitchenManager.orders.clear()
+	KitchenManager._spawn_order()
+	KitchenManager.orders[0]["recipe_id"] = "egg_rice"
+	_check(KitchenManager.advance_station(0), "有匹配订单时应能上菜")
+	_check(GameState.money > money_before, "完成出餐后应收到营业收入")
+	KitchenManager.end_shift()
+
+func _test_bank_and_lottery() -> void:
+	GameState.reset_new_game()
+	GameState.money = 1000
+	_check(FinanceManager.deposit(300), "应能把现金存进银行")
+	_check(FinanceManager.savings == 300 and GameState.money == 700, "存款后银行余额和现金应同步变化")
+	var interest_before := FinanceManager.total_interest
+	FinanceManager.begin_new_day(TimeSystem.current_day + 1)
+	_check(FinanceManager.total_interest > interest_before, "过一天后银行存款应产生利息")
+	var savings_before_withdraw := FinanceManager.savings
+	_check(FinanceManager.withdraw(100), "应能从银行取回资金")
+	_check(FinanceManager.savings == savings_before_withdraw - 100, "取款后银行余额应减少")
+	var money_before_ticket := GameState.money
+	var lottery := FinanceManager.buy_lottery(1)
+	_check(int(lottery["spent"]) == 10, "一张彩票应固定花费 10 元")
+	_check(GameState.money == money_before_ticket - 10 + int(lottery["won"]), "彩票扣款和中奖应正确入账")
+
 func _test_save_and_load() -> void:
 	GameState.reset_new_game()
 	GameState.money = 777
@@ -157,6 +239,9 @@ func _test_save_and_load() -> void:
 	WeatherSystem.current_weather_id = "rain"
 	MarketEconomyManager.total_sales = 1234
 	MarketEconomyManager.stall_tier = 1
+	BusinessManager.total_revenue = 3456
+	BusinessManager.labor_stock = 7
+	FinanceManager.savings = 789
 	ExpeditionManager.active = false
 	ExpeditionManager.site_id = "old_pipe"
 	_check(SaveManager.save_game(false), "应能写入扩展测试存档")
@@ -179,6 +264,8 @@ func _test_save_and_load() -> void:
 	_check(TimeSystem.current_day == 12 and WeatherSystem.current_weather_id == "rain", "读档应恢复时间与天气")
 	_check(MarketEconomyManager.total_sales == 1234 and MarketEconomyManager.stall_tier == 1, "读档应恢复旧货行情进度")
 	_check(ExpeditionManager.site_id == "old_pipe", "读档应恢复旧址记录")
+	_check(BusinessManager.total_revenue == 3456 and BusinessManager.labor_stock == 7, "读档应恢复经营与库存数据")
+	_check(FinanceManager.savings == 789, "读档应恢复银行存款")
 
 func _test_30_day_cycle() -> void:
 	GameState.reset_new_game()

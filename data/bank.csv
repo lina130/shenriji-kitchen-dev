@@ -1,0 +1,4 @@
+key,value,unit,note
+daily_interest_rate,0.0035,ratio,活期每日利率
+minimum_deposit,1,yuan,最低存款
+lottery_ticket_price,10,yuan,单张彩票价格

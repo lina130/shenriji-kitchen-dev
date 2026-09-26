@@ -10,6 +10,7 @@ const INPUTS := {
 	"map": [KEY_M],
 	"collection": [KEY_C],
 	"bank": [KEY_B],
+	"kitchen": [KEY_K],
 	"chat": [KEY_T],
 	"save_game": [KEY_F5],
 	"load_game": [KEY_F9],

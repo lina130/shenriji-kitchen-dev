@@ -4,7 +4,7 @@ extends CanvasLayer
 signal modal_changed(is_open: bool)
 signal return_to_menu_requested
 
-enum ModalState { NONE, INVENTORY, SHOP, MARKET, COLLECTION_LOG, MAP, BANK, DIALOGUE, MONTHLY, PAUSE, EXPEDITION_MAP }
+enum ModalState { NONE, INVENTORY, SHOP, MARKET, COLLECTION_LOG, MAP, BANK, DIALOGUE, MONTHLY, PAUSE, EXPEDITION_MAP, KITCHEN, WHOLESALE }
 
 var _root: Control
 var _ambient_overlay: ColorRect
@@ -24,6 +24,10 @@ var _notice_time_left := 0.0
 var _clock_accumulator := 0.0
 var _modal_state := ModalState.NONE
 var _fog_overlay: ColorRect
+var _kitchen_orders_box: VBoxContainer
+var _kitchen_stations_box: VBoxContainer
+var _kitchen_recipes_box: VBoxContainer
+var _kitchen_status_label: Label
 var _active_npc_id := ""
 
 func _ready() -> void:
@@ -31,6 +35,9 @@ func _ready() -> void:
 	add_to_group("hud")
 	_build_interface()
 	GameState.money_changed.connect(_on_money_changed)
+	KitchenManager.changed.connect(_on_kitchen_changed)
+	BusinessManager.changed.connect(_on_business_changed)
+	FinanceManager.changed.connect(_on_finance_changed)
 	NoticeManager.notice_requested.connect(show_notice)
 	WeatherSystem.weather_changed.connect(_on_weather_changed)
 	TimeSystem.paused_changed.connect(_on_pause_changed)
@@ -44,6 +51,8 @@ func _process(delta: float) -> void:
 	if _clock_accumulator >= 0.2:
 		_clock_accumulator = 0.0
 		_update_clock()
+		if _modal_state == ModalState.KITCHEN:
+			_refresh_kitchen_ui()
 	_apply_ambient_state()
 	_apply_expedition_state()
 	if _notice_time_left > 0.0:
@@ -67,6 +76,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		_toggle_modal(ModalState.MAP, open_map)
 	elif event.is_action_pressed("bank"):
 		_toggle_modal(ModalState.BANK, open_bank)
+	elif event.is_action_pressed("kitchen"):
+		_toggle_modal(ModalState.KITCHEN, open_kitchen)
 	elif event.is_action_pressed("chat"):
 		NoticeManager.show_message("好友邀约会在轻量联机版本开放。", "hint")
 	else:
@@ -111,7 +122,18 @@ func open_map() -> void:
 
 func open_bank() -> void:
 	_build_bank_content()
-	_set_modal(ModalState.BANK, "生活账本", "只记日子里最重要的几笔。")
+	_set_modal(ModalState.BANK, "银行与彩票", "存钱、取钱，偶尔买一张彩票试试手气。")
+
+func open_kitchen() -> void:
+	if not KitchenManager.active:
+		if not KitchenManager.start_shift():
+			return
+	_build_kitchen_content()
+	_set_modal(ModalState.KITCHEN, "夜市档口", "订单不等人，备料、下锅、上菜要连贯。")
+
+func open_wholesale() -> void:
+	_build_wholesale_content()
+	_set_modal(ModalState.WHOLESALE, "清晨批发市场", "便宜时进货，紧缺时出手，也会看走眼。")
 
 func open_dialogue(npc_id: String) -> void:
 	_active_npc_id = npc_id
@@ -130,8 +152,26 @@ func open_pause() -> void:
 func _toggle_modal(state: ModalState, opener: Callable) -> void:
 	if _modal_state == state:
 		_close_modal()
-	else:
-		opener.call()
+		return
+	if _modal_state != ModalState.NONE:
+		_close_modal()
+	opener.call()
+
+func _on_kitchen_changed() -> void:
+	if _modal_state == ModalState.KITCHEN and is_instance_valid(_kitchen_orders_box):
+		_refresh_kitchen_ui()
+
+func _on_business_changed() -> void:
+	if _modal_state == ModalState.MARKET:
+		_build_market_content()
+	elif _modal_state == ModalState.WHOLESALE:
+		_build_wholesale_content()
+	elif _modal_state == ModalState.BANK:
+		_build_bank_content()
+
+func _on_finance_changed() -> void:
+	if _modal_state == ModalState.BANK:
+		_build_bank_content()
 func _build_interface() -> void:
 	_root = Control.new()
 	_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -295,6 +335,15 @@ func _build_shop_content() -> void:
 
 func _build_market_content() -> void:
 	_clear_modal_items()
+	_modal_items.add_child(_make_empty_label("%s · 已服务 %d 位客人 · 店铺估值 ¥%d" % [BusinessManager.get_business_level_name(), BusinessManager.customers_served, BusinessManager.get_business_valuation()]))
+	var operations := HBoxContainer.new()
+	operations.add_theme_constant_override("separation", 8)
+	_add_action_button(operations, "开始营业", func() -> void: _open_kitchen_from_market())
+	_add_action_button(operations, "批发进货", func() -> void: _open_wholesale_from_market())
+	_add_action_button(operations, "升级店面", _on_business_upgrade)
+	_modal_items.add_child(operations)
+	if BusinessManager.can_sell_business():
+		_add_action_button(_modal_items, "转让铺子估值 ¥%d" % BusinessManager.get_business_valuation(), _on_sell_business)
 	_modal_items.add_child(_make_empty_label(MarketEconomyManager.get_market_brief()))
 	_modal_items.add_child(_make_empty_label("%s · %s" % [MarketEconomyManager.get_stall_name(), MarketEconomyManager.get_consignment_summary()]))
 	var entries := InventoryManager.get_giftable_lines()
@@ -326,6 +375,128 @@ func _build_market_content() -> void:
 		upgrade.custom_minimum_size = Vector2(0, 50)
 		upgrade.pressed.connect(_on_market_upgrade)
 		_modal_items.add_child(upgrade)
+
+func _open_kitchen_from_market() -> void:
+	_close_modal()
+	open_kitchen()
+
+func _open_wholesale_from_market() -> void:
+	_close_modal()
+	open_wholesale()
+
+func _on_business_upgrade() -> void:
+	BusinessManager.upgrade_business()
+
+func _on_sell_business() -> void:
+	BusinessManager.sell_business()
+
+func _build_kitchen_content() -> void:
+	_clear_modal_items()
+	_kitchen_status_label = Label.new()
+	_kitchen_status_label.add_theme_color_override("font_color", Color("#f4d88a"))
+	_modal_items.add_child(_kitchen_status_label)
+	_kitchen_orders_box = VBoxContainer.new()
+	_modal_items.add_child(_kitchen_orders_box)
+	_kitchen_stations_box = VBoxContainer.new()
+	_modal_items.add_child(_kitchen_stations_box)
+	_kitchen_recipes_box = VBoxContainer.new()
+	_modal_items.add_child(_kitchen_recipes_box)
+	var support_row := HBoxContainer.new()
+	support_row.add_theme_constant_override("separation", 8)
+	_add_action_button(support_row, "招个帮手 ¥36", func() -> void: BusinessManager.restock_labor())
+	_add_action_button(support_row, "集中缓一缓 ¥30", func() -> void: BusinessManager.restock_brain())
+	_add_action_button(support_row, "提前打烊", func() -> void: KitchenManager.end_shift())
+	_modal_items.add_child(support_row)
+	_refresh_kitchen_ui()
+
+func _refresh_kitchen_ui() -> void:
+	if not is_instance_valid(_kitchen_orders_box):
+		return
+	if not KitchenManager.active:
+		_kitchen_status_label.text = "今日营业已结束。"
+		_clear_children(_kitchen_orders_box)
+		_clear_children(_kitchen_stations_box)
+		_clear_children(_kitchen_recipes_box)
+		_add_action_button(_kitchen_orders_box, "再开一次档", func() -> void: _restart_kitchen())
+		return
+	_kitchen_status_label.text = "剩余 %d 秒 · 已出餐 %d/%d · 连击 %d · 劳力 %d · 脑力 %d" % [
+		int(ceil(KitchenManager.time_left)), KitchenManager.served, KitchenManager.get_order_target(),
+		KitchenManager.combo, BusinessManager.labor_stock, BusinessManager.brain_stock,
+	]
+	_clear_children(_kitchen_orders_box)
+	_clear_children(_kitchen_stations_box)
+	_clear_children(_kitchen_recipes_box)
+	_kitchen_orders_box.add_child(_make_empty_label("等待订单："))
+	for order in KitchenManager.get_orders_status():
+		_kitchen_orders_box.add_child(_make_empty_label("%s · 耐心 %d 秒" % [order["name"], int(ceil(float(order["patience"])))]))
+	_kitchen_stations_box.add_child(_make_empty_label("工位："))
+	for station in KitchenManager.get_stations_status():
+		var button := Button.new()
+		button.custom_minimum_size = Vector2(0, 48)
+		button.text = "工位 %d · %s · %s · %d%%" % [int(station["index"]) + 1, station["name"], station["action_text"], int(float(station["progress_ratio"]) * 100.0)]
+		button.pressed.connect(_on_kitchen_station.bind(int(station["index"])))
+		_kitchen_stations_box.add_child(button)
+	_kitchen_recipes_box.add_child(_make_empty_label("菜单（点一下放进空闲工位）："))
+	for recipe in KitchenManager.get_recipes_status():
+		var button := Button.new()
+		button.custom_minimum_size = Vector2(0, 44)
+		button.text = "%s ¥%d · %s · 劳力%d 脑力%d" % [recipe["name"], int(recipe["sale_price"]), recipe["goods_recipe"], int(recipe["labor_cost"]), int(recipe["brain_cost"])]
+		button.disabled = not bool(recipe["available"]) or _first_idle_station() < 0
+		button.pressed.connect(_on_kitchen_place.bind(str(recipe["id"])))
+		_kitchen_recipes_box.add_child(button)
+
+func _restart_kitchen() -> void:
+	if KitchenManager.start_shift():
+		_build_kitchen_content()
+
+func _on_kitchen_place(recipe_id: String) -> void:
+	var station_index := _first_idle_station()
+	if station_index >= 0:
+		KitchenManager.place_recipe(recipe_id, station_index)
+
+func _on_kitchen_station(station_index: int) -> void:
+	KitchenManager.advance_station(station_index)
+
+func _first_idle_station() -> int:
+	for station in KitchenManager.get_stations_status():
+		if str(station["state"]) == "idle":
+			return int(station["index"])
+	return -1
+
+func _build_wholesale_content() -> void:
+	_clear_modal_items()
+	_modal_items.add_child(_make_empty_label("现金 ¥%d · 商品库存价值 ¥%d · 今日价格每日变化" % [GameState.money, BusinessManager.get_stock_value()]))
+	for line in BusinessManager.get_goods_lines():
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		var info := Label.new()
+		info.custom_minimum_size = Vector2(245, 0)
+		info.text = "%s ×%d · 进¥%d 卖¥%d · %s" % [line["name"], int(line["stock"]), int(line["buy_price"]), int(line["sell_price"]), line["note"]]
+		info.add_theme_color_override("font_color", Color("#dce8e2"))
+		row.add_child(info)
+		_add_action_button(row, "买1", _on_wholesale_buy.bind(str(line["id"]), 1))
+		_add_action_button(row, "买5", _on_wholesale_buy.bind(str(line["id"]), 5))
+		_add_action_button(row, "卖1", _on_wholesale_sell.bind(str(line["id"]), 1))
+		_add_action_button(row, "卖5", _on_wholesale_sell.bind(str(line["id"]), 5))
+		_modal_items.add_child(row)
+
+func _on_wholesale_buy(goods_id: String, quantity: int) -> void:
+	BusinessManager.buy_goods(goods_id, quantity)
+
+func _on_wholesale_sell(goods_id: String, quantity: int) -> void:
+	BusinessManager.sell_goods(goods_id, quantity)
+
+func _clear_children(node: Node) -> void:
+	for child in node.get_children():
+		child.queue_free()
+
+func _add_action_button(parent: Node, text: String, callback: Callable) -> Button:
+	var button := Button.new()
+	button.text = text
+	button.custom_minimum_size = Vector2(0, 40)
+	button.pressed.connect(callback)
+	parent.add_child(button)
+	return button
 
 func _build_collection_log_content() -> void:
 	_clear_modal_items()
@@ -411,12 +582,30 @@ func _build_map_content() -> void:
 
 func _build_bank_content() -> void:
 	_clear_modal_items()
-	_modal_items.add_child(_make_empty_label("手上的现金：¥%d" % GameState.money))
-	_modal_items.add_child(_make_empty_label("下一次房租日期：第 %d 天\n欠下的房租：%s" % [
-		((TimeSystem.current_day / GameState.rent_interval_days) + 1) * GameState.rent_interval_days,
-		"还没有拖欠" if GameState.rent_arrears == 0 else "¥%d" % GameState.rent_arrears,
+	_modal_items.add_child(_make_empty_label("现金 ¥%d · 银行存款 ¥%d · 累计利息 ¥%d" % [GameState.money, FinanceManager.savings, FinanceManager.total_interest]))
+	_modal_items.add_child(_make_empty_label(FinanceManager.get_daily_rate_text()))
+	var bank_row := HBoxContainer.new()
+	bank_row.add_theme_constant_override("separation", 8)
+	_add_action_button(bank_row, "存 100", FinanceManager.deposit.bind(100))
+	_add_action_button(bank_row, "存 500", FinanceManager.deposit.bind(500))
+	_add_action_button(bank_row, "全部存", func() -> void: FinanceManager.deposit(GameState.money))
+	_modal_items.add_child(bank_row)
+	var withdraw_row := HBoxContainer.new()
+	withdraw_row.add_theme_constant_override("separation", 8)
+	_add_action_button(withdraw_row, "取 100", FinanceManager.withdraw.bind(100))
+	_add_action_button(withdraw_row, "全部取", func() -> void: FinanceManager.withdraw(FinanceManager.savings))
+	_modal_items.add_child(withdraw_row)
+	_modal_items.add_child(_make_empty_label("一期彩票 ¥10。%s" % FinanceManager.get_lottery_summary()))
+	var lottery_row := HBoxContainer.new()
+	lottery_row.add_theme_constant_override("separation", 8)
+	_add_action_button(lottery_row, "买 1 张", func() -> void: FinanceManager.buy_lottery(1))
+	_add_action_button(lottery_row, "买 10 张", func() -> void: FinanceManager.buy_lottery(10))
+	_modal_items.add_child(lottery_row)
+	_modal_items.add_child(_make_empty_label("房租与月账：%s · 本月进账 ¥%d · 本月支出 ¥%d" % [
+		"没有欠租" if GameState.rent_arrears == 0 else "还差 ¥%d" % GameState.rent_arrears,
+		ProgressionManager.month_earned,
+		ProgressionManager.month_spent,
 	]))
-	_modal_items.add_child(_make_empty_label("这个月的进账大约 ¥%d，花出去大约 ¥%d。" % [ProgressionManager.month_earned, ProgressionManager.month_spent]))
 
 func _build_dialogue_content(line: String) -> void:
 	_clear_modal_items()
@@ -500,6 +689,7 @@ func _set_modal(state: ModalState, title: String, subtitle: String, pause_clock:
 
 func _close_modal() -> void:
 	var was_pause := _modal_state == ModalState.PAUSE
+	var was_kitchen := _modal_state == ModalState.KITCHEN
 	if _modal_state == ModalState.NONE:
 		return
 	_modal_state = ModalState.NONE

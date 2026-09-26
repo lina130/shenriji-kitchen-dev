@@ -184,6 +184,8 @@ func _on_day_started(day_number: int) -> void:
 	CollectionManager.refresh_for_day(day_number)
 	RelationshipManager.begin_new_day(day_number)
 	MarketEconomyManager.begin_new_day(day_number)
+	BusinessManager.begin_new_day(day_number)
+	FinanceManager.begin_new_day(day_number)
 	_low_energy_warned_on_day = -1
 	if day_number > 1 and day_number % rent_interval_days == 0:
 		_charge_rent()
@@ -258,6 +260,9 @@ func reset_new_game() -> void:
 	RelationshipManager.reset_new_game()
 	MarketEconomyManager.reset_new_game()
 	ExpeditionManager.reset_new_game()
+	BusinessManager.reset_new_game()
+	FinanceManager.reset_new_game()
+	KitchenManager.reset_new_game()
 	TimeSystem.reset_new_game()
 	WeatherSystem.begin_new_day(1)
 	CollectionManager.reset_new_game()

@@ -10,6 +10,10 @@ var world: WorldRoot
 var in_game := false
 
 func _ready() -> void:
+	if "--full-simulation" in OS.get_cmdline_user_args():
+		var simulation_script := load("res://tests/full_progression_test.gd")
+		add_child(simulation_script.new())
+		return
 	if "--playtest" in OS.get_cmdline_user_args():
 		get_tree().auto_accept_quit = false
 		var playtest_script := load("res://tests/playtest_runner.gd")

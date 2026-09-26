@@ -5,7 +5,7 @@
 - Godot 4.2+，当前开发及导出验证版本为 4.7.2 stable。
 - 2D 俯视角、1280×720 基准分辨率、GL Compatibility。
 - GDScript 为主要语言，模块通过信号通信。
-- 正式美术阶段仍以 TileMap 分层架构为最终方向；`0.2.0` 使用程序化绘制占位图。
+- 正式美术阶段仍以 TileMap 分层架构为最终方向；`0.3.0` 使用程序化绘制占位图。
 
 ## 全局系统
 
@@ -24,6 +24,9 @@
 | `RelationshipManager` | NPC 对话、喜好礼物和隐藏关系阶段 |
 | `MarketEconomyManager` | 每日行情、立即出售、寄卖、摊位扩张、熟客口碑与旧址解锁 |
 | `ExpeditionManager` | 旧址探索生成、光照时长、拾取和返回结算 |
+| `BusinessManager` | 脑力劳力库存、商品成本、出餐收入、店铺扩张与转让 |
+| `FinanceManager` | 银行存款、每日利息、彩票 |
+| `KitchenManager` | 实时订单、工位阶段、耐心、连击与打烊结算 |
 | `GameState` | 金钱、体感状态、工作、学习、睡眠、房租 |
 | `AudioManager` | 氛围音乐、天气音和交互反馈 |
 | `SceneRouter` | 地点与出生点路由 |

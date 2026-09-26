@@ -1,0 +1,15 @@
+key,value,unit,note
+labor_base_capacity,12,point,初始劳力容量
+brain_base_capacity,10,point,初始脑力容量
+labor_daily_restore,6,point,每日恢复劳力
+brain_daily_restore,5,point,每日恢复脑力
+labor_restock_size,3,point,应急招聘一次增加的劳力
+brain_restock_size,3,point,集中休息一次增加的脑力
+labor_restock_cost,36,yuan,应急招聘成本
+brain_restock_cost,30,yuan,集中休息成本
+shift_duration,120,second,单次营业时长
+shift_order_target,12,order,单次营业目标订单
+business_upgrade_1_cost,900,yuan,固定档口投入
+business_upgrade_2_cost,2600,yuan,小铺面投入
+business_upgrade_3_cost,7200,yuan,深夜食堂投入
+business_sale_min_level,2,level,允许转让经营权的最低等级

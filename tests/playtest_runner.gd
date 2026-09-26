@@ -58,6 +58,28 @@ func _ready() -> void:
 	await _press_modal_button_prefix("卖")
 	await _press_modal_button_prefix("寄卖")
 	await _press_modal_button_prefix("把摊位做大一点")
+	await _press_modal_button_prefix("批发进货")
+	await _press_modal_button_prefix("买1")
+	await _press_modal_button_prefix("卖1")
+	await _close_modal()
+	await _connect_and_click_nearest("market_stall", "重新打开经营台")
+	await _press_modal_button_prefix("开始营业")
+	await _wait_frames(18)
+	KitchenManager.orders[0]["recipe_id"] = "egg_rice"
+	await _press_modal_button_prefix("蛋炒饭")
+	await _wait_seconds(3.7)
+	await _press_modal_button_prefix("工位 1")
+	await _wait_seconds(2.4)
+	await _press_modal_button_prefix("工位 1")
+	await _wait_frames(4)
+	await _press_modal_button_prefix("工位 1")
+	await _wait_frames(4)
+	await _close_modal()
+	TimeSystem.minute_of_day = 7 * 60
+	await _open_shortcut("bank", "打开银行与彩票")
+	await _press_modal_button_prefix("存 100")
+	await _press_modal_button_prefix("取 100")
+	await _press_modal_button_prefix("买 1 张")
 	await _close_modal()
 	await _connect_and_click_nearest("expedition_board", "打开旧址入口")
 	await _press_modal_button_prefix("旧楼地下室")
@@ -121,11 +143,29 @@ func _run_home_checks() -> void:
 	_step("睡觉推进到次日")
 
 func _open_shortcut(action_name: String, label: String) -> void:
-	Input.action_press(action_name)
+	var key_map := {
+		"inventory": KEY_I,
+		"collection": KEY_C,
+		"map": KEY_M,
+		"bank": KEY_B,
+		"kitchen": KEY_K,
+	}
+	var expected_map := {
+		"inventory": main.hud.ModalState.INVENTORY,
+		"collection": main.hud.ModalState.COLLECTION_LOG,
+		"map": main.hud.ModalState.MAP,
+		"bank": main.hud.ModalState.BANK,
+		"kitchen": main.hud.ModalState.KITCHEN,
+	}
+	var event := InputEventKey.new()
+	event.physical_keycode = key_map[action_name]
+	event.pressed = true
+	main.hud._unhandled_input(event)
 	await get_tree().process_frame
-	Input.action_release(action_name)
-	await get_tree().process_frame
-	_step(label)
+	if main.hud._modal_state != expected_map[action_name]:
+		_fail("快捷键未打开界面：%s" % label)
+	else:
+		_step(label)
 
 func _close_modal() -> void:
 	if not is_instance_valid(main.hud) or main.hud._modal_state == main.hud.ModalState.NONE:
@@ -133,6 +173,13 @@ func _close_modal() -> void:
 	main.hud._close_modal()
 	await get_tree().process_frame
 
+
+
+func _wait_seconds(seconds: float) -> void:
+	var elapsed := 0.0
+	while elapsed < seconds:
+		await get_tree().process_frame
+		elapsed += get_process_delta_time()
 
 func _press_modal_button_prefix(prefix: String) -> void:
 	var button = _find_button_prefix(main.hud._modal_items, prefix)

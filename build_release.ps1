@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$version = "0.2.0"
+$version = "0.3.0"
 $windowsDir = Join-Path $root "release\windows"
 New-Item -ItemType Directory -Force -Path $windowsDir | Out-Null
 
@@ -24,6 +24,10 @@ if ($LASTEXITCODE -ne 0) { throw "自动测试失败，已停止打包。" }
 Write-Host "运行 100 月经济压力测试..."
 & $godotPath --headless --path $root -- --stress-test
 if ($LASTEXITCODE -ne 0) { throw "经济压力测试失败，已停止打包。" }
+
+Write-Host "运行完整经营与收集模拟..."
+& $godotPath --headless --path $root -- --full-simulation
+if ($LASTEXITCODE -ne 0) { throw "完整经营与收集模拟失败，已停止打包。" }
 
 Write-Host "运行真实窗口玩家操作测试..."
 & $godotPath --path $root --resolution 1280x720 -- --playtest
@@ -51,13 +55,13 @@ F9 读取
 Esc 暂停或返回
 
 说明：
-本版本采用旧货行情、立即出售、柜台寄卖、摊位扩张和熟客口碑组成的长线经济循环，并开放四个旧址探索点。
+本版本围绕脑力、劳力、食材库存和实时出餐经营展开，并包含旧货行情、寄卖、批发差价、银行、彩票与旧址探索。
 背包、地图和账本打开时游戏时间仍会继续。
 "@
 Set-Content -LiteralPath (Join-Path $windowsDir "运行说明.txt") -Value $readme -Encoding UTF8
-Copy-Item -LiteralPath (Join-Path $root "docs\RELEASE_NOTES_0.2.0.md") -Destination (Join-Path $windowsDir "发行说明.md") -Force
+Copy-Item -LiteralPath (Join-Path $root "docs\RELEASE_NOTES_0.3.0.md") -Destination (Join-Path $windowsDir "发行说明.md") -Force
 Copy-Item -LiteralPath (Join-Path $root "docs\KNOWN_ISSUES.md") -Destination (Join-Path $windowsDir "已知问题.md") -Force
-Copy-Item -LiteralPath (Join-Path $root "docs\游戏预览_0.2.0.png") -Destination (Join-Path $windowsDir "游戏预览.png") -Force
+Copy-Item -LiteralPath (Join-Path $root "docs\游戏预览_0.3.0.png") -Destination (Join-Path $windowsDir "游戏预览.png") -Force
 
 $exePath = Join-Path $windowsDir "深城日常.exe"
 $hash = Get-FileHash -LiteralPath $exePath -Algorithm SHA256

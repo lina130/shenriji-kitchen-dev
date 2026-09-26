@@ -21,3 +21,5 @@ miner_lamp,矿工灯,灯罩上刻着旧车间的编号，擦净后还能亮。,l
 harbor_token,老码头徽章,来自这座城市还靠渡轮运货的年代。,legendary,320,0,chen,true,metal
 jade_button,旧旗袍玉扣,温润的一小块玉，曾经缝在谁的衣襟上。,legendary,340,0,mei,true,ceramic
 old_star_map,手绘旧星图,画着一片看不见霓虹的夜空。,legendary,380,0,lin,true,paper
+golden_abacus,金算盘,旧生意人的金算盘，珠子拨动时还留着账本的气息。,legendary,450,0,chen,true,metal
+store_plaque,老店招牌,一块写着旧店名的木牌，边角被烟火熏得发亮。,legendary,520,0,mei,true,daily

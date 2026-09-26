@@ -1,0 +1,7 @@
+recipe_id,name,goods_recipe,labor_cost,brain_cost,prep_seconds,sale_price,category
+egg_rice,蛋炒饭,rice:1|egg:2,1,1,3.2,18,主食
+beef_noodles,牛肉面,noodles:1|beef:2|greens:1,2,1,4.5,36,主食
+lemon_tea,手打柠檬茶,tea:1|lemon:2|ice:1,1,1,2.8,20,饮品
+roast_skewer,夜市烤肉,chicken:2|spice:1,2,1,4.0,32,小吃
+red_bean_bun,红豆包,flour:2|red_bean:2,1,1,3.5,26,甜点
+chicken_rice,鸡腿饭,rice:1|chicken:2|greens:1,2,2,5.0,42,套餐
