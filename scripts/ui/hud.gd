@@ -2,14 +2,16 @@ class_name GameHUD
 extends CanvasLayer
 
 signal modal_changed(is_open: bool)
+signal return_to_menu_requested
 
-enum ModalState { NONE, INVENTORY, SHOP, PAUSE }
+enum ModalState { NONE, INVENTORY, SHOP, MARKET, COLLECTION_LOG, MAP, BANK, DIALOGUE, MONTHLY, PAUSE }
 
 var _root: Control
 var _ambient_overlay: ColorRect
 var _status_panel: PanelContainer
 var _money_label: Label
 var _time_label: Label
+var _weather_label: Label
 var _context_panel: PanelContainer
 var _context_label: Label
 var _notice_panel: PanelContainer
@@ -21,7 +23,7 @@ var _modal_items: VBoxContainer
 var _notice_time_left := 0.0
 var _clock_accumulator := 0.0
 var _modal_state := ModalState.NONE
-var _modal_shop_id := ""
+var _active_npc_id := ""
 
 func _ready() -> void:
 	layer = 20
@@ -29,8 +31,10 @@ func _ready() -> void:
 	_build_interface()
 	GameState.money_changed.connect(_on_money_changed)
 	NoticeManager.notice_requested.connect(show_notice)
+	WeatherSystem.weather_changed.connect(_on_weather_changed)
 	TimeSystem.paused_changed.connect(_on_pause_changed)
 	_on_money_changed(GameState.money)
+	_on_weather_changed(WeatherSystem.current_weather_id)
 	_update_clock()
 	_apply_ambient_state()
 
@@ -46,15 +50,6 @@ func _process(delta: float) -> void:
 			_notice_panel.visible = false
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("inventory"):
-		if _modal_state == ModalState.SHOP:
-			_close_modal()
-		elif _modal_state == ModalState.INVENTORY:
-			_close_modal()
-		else:
-			open_inventory()
-		get_viewport().set_input_as_handled()
-		return
 	if event.is_action_pressed("ui_cancel"):
 		if _modal_state != ModalState.NONE:
 			_close_modal()
@@ -62,6 +57,19 @@ func _unhandled_input(event: InputEvent) -> void:
 			open_pause()
 		get_viewport().set_input_as_handled()
 		return
+	if event.is_action_pressed("inventory"):
+		_toggle_modal(ModalState.INVENTORY, open_inventory)
+	elif event.is_action_pressed("collection"):
+		_toggle_modal(ModalState.COLLECTION_LOG, open_collection_log)
+	elif event.is_action_pressed("map"):
+		_toggle_modal(ModalState.MAP, open_map)
+	elif event.is_action_pressed("bank"):
+		_toggle_modal(ModalState.BANK, open_bank)
+	elif event.is_action_pressed("chat"):
+		NoticeManager.show_message("好友邀约会在轻量联机版本开放。", "hint")
+	else:
+		return
+	get_viewport().set_input_as_handled()
 
 func set_context_prompt(text: String) -> void:
 	_context_label.text = text
@@ -76,20 +84,53 @@ func show_notice(message: String, tone: String = "normal") -> void:
 	_notice_time_left = 2.8
 
 func open_inventory(intro: String = "") -> void:
-	_build_inventory_content(intro)
+	_build_inventory_content()
 	_set_modal(ModalState.INVENTORY, "随身的包", intro if not intro.is_empty() else "东西都塞在一起，拿起来就能用。")
 
-func open_shop(shop_id: String) -> void:
-	_modal_shop_id = shop_id
+func open_shop(_shop_id: String = "convenience_store") -> void:
 	_build_shop_content()
 	_set_modal(ModalState.SHOP, "街角便利店", "柜台上都写着固定价格。")
 
+func open_market(_market_id: String = "old_market") -> void:
+	_build_market_content()
+	_set_modal(ModalState.MARKET, "旧货行", "旧东西没有统一价钱，愿意收就换点生活费。")
+
+func open_collection_log() -> void:
+	_build_collection_log_content()
+	_set_modal(ModalState.COLLECTION_LOG, "旧物册", "逛到过的东西会留在这里，不催你去凑齐。")
+
+func open_map() -> void:
+	_build_map_content()
+	_set_modal(ModalState.MAP, "深城手绘地图", "已走过的角落都记在上面。")
+
+func open_bank() -> void:
+	_build_bank_content()
+	_set_modal(ModalState.BANK, "生活账本", "只记日子里最重要的几笔。")
+
+func open_dialogue(npc_id: String) -> void:
+	_active_npc_id = npc_id
+	var line := RelationshipManager.talk_to(npc_id)
+	_build_dialogue_content(line)
+	_set_modal(ModalState.DIALOGUE, RelationshipManager.get_npc_name(npc_id), line)
+
+func show_month_summary(summary: Dictionary) -> void:
+	_build_month_summary_content(summary)
+	_set_modal(ModalState.MONTHLY, "城中村的生活小结", "一个月过去，新的日子又开始了。")
+
+func open_pause() -> void:
+	_build_pause_content()
+	_set_modal(ModalState.PAUSE, "先歇一下", "时间停在这里，外面暂时不会往前走。", true)
+
+func _toggle_modal(state: ModalState, opener: Callable) -> void:
+	if _modal_state == state:
+		_close_modal()
+	else:
+		opener.call()
 func _build_interface() -> void:
 	_root = Control.new()
 	_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_root)
-
 	var font := SystemFont.new()
 	font.font_names = PackedStringArray(["Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "sans-serif"])
 	var theme := Theme.new()
@@ -100,16 +141,14 @@ func _build_interface() -> void:
 	_ambient_overlay = ColorRect.new()
 	_ambient_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_ambient_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ambient_overlay.color = Color(0.02, 0.05, 0.08, 0.0)
 	_root.add_child(_ambient_overlay)
 
 	_status_panel = PanelContainer.new()
 	_status_panel.position = Vector2(24, 20)
-	_status_panel.size = Vector2(430, 58)
+	_status_panel.size = Vector2(610, 58)
 	_status_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_style_panel(_status_panel, Color(0.04, 0.09, 0.11, 0.84), Color(0.56, 0.88, 0.79, 0.32))
 	_root.add_child(_status_panel)
-
 	var status_row := HBoxContainer.new()
 	status_row.add_theme_constant_override("separation", 26)
 	_status_panel.add_child(status_row)
@@ -121,14 +160,18 @@ func _build_interface() -> void:
 	_time_label.add_theme_font_size_override("font_size", 20)
 	_time_label.add_theme_color_override("font_color", Color("#d9eee7"))
 	status_row.add_child(_time_label)
+	_weather_label = Label.new()
+	_weather_label.add_theme_font_size_override("font_size", 19)
+	_weather_label.add_theme_color_override("font_color", Color("#a9cbd3"))
+	status_row.add_child(_weather_label)
 
 	_context_panel = PanelContainer.new()
 	_context_panel.anchor_left = 0.5
 	_context_panel.anchor_right = 0.5
 	_context_panel.anchor_top = 1.0
 	_context_panel.anchor_bottom = 1.0
-	_context_panel.offset_left = -260
-	_context_panel.offset_right = 260
+	_context_panel.offset_left = -280
+	_context_panel.offset_right = 280
 	_context_panel.offset_top = -104
 	_context_panel.offset_bottom = -48
 	_context_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -146,8 +189,8 @@ func _build_interface() -> void:
 	_notice_panel.anchor_right = 0.5
 	_notice_panel.anchor_top = 1.0
 	_notice_panel.anchor_bottom = 1.0
-	_notice_panel.offset_left = -350
-	_notice_panel.offset_right = 350
+	_notice_panel.offset_left = -370
+	_notice_panel.offset_right = 370
 	_notice_panel.offset_top = -172
 	_notice_panel.offset_bottom = -118
 	_notice_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -165,14 +208,13 @@ func _build_interface() -> void:
 	_modal_panel.anchor_right = 0.5
 	_modal_panel.anchor_top = 0.5
 	_modal_panel.anchor_bottom = 0.5
-	_modal_panel.offset_left = -330
-	_modal_panel.offset_right = 330
-	_modal_panel.offset_top = -250
-	_modal_panel.offset_bottom = 250
+	_modal_panel.offset_left = -390
+	_modal_panel.offset_right = 390
+	_modal_panel.offset_top = -285
+	_modal_panel.offset_bottom = 285
 	_modal_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	_style_panel(_modal_panel, Color(0.035, 0.075, 0.085, 0.98), Color(0.96, 0.77, 0.35, 0.7), 18)
 	_root.add_child(_modal_panel)
-
 	var modal_margin := MarginContainer.new()
 	modal_margin.add_theme_constant_override("margin_left", 26)
 	modal_margin.add_theme_constant_override("margin_right", 26)
@@ -199,11 +241,10 @@ func _build_interface() -> void:
 	modal_column.add_child(_modal_items)
 	var close_button := Button.new()
 	close_button.text = "收起（Esc）"
-	close_button.custom_minimum_size = Vector2(0, 46)
+	close_button.custom_minimum_size = Vector2(0, 44)
 	close_button.pressed.connect(_close_modal)
 	modal_column.add_child(close_button)
-
-func _build_inventory_content(intro: String) -> void:
+func _build_inventory_content() -> void:
 	_clear_modal_items()
 	var entries := InventoryManager.get_inventory_lines()
 	if entries.is_empty():
@@ -213,7 +254,10 @@ func _build_inventory_content(intro: String) -> void:
 		var button := Button.new()
 		button.custom_minimum_size = Vector2(0, 54)
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		button.text = "%s  ×%d" % [entry["name"], entry["count"]]
+		var label := "%s  ×%d" % [entry["name"], entry["count"]]
+		if str(entry["category"]) == "collectible":
+			label += "   · 旧物"
+		button.text = label
 		button.tooltip_text = str(entry["description"])
 		if bool(entry["usable"]):
 			button.pressed.connect(_on_inventory_use.bind(str(entry["id"])))
@@ -223,8 +267,7 @@ func _build_inventory_content(intro: String) -> void:
 
 func _build_shop_content() -> void:
 	_clear_modal_items()
-	var ids := ["meal_rice", "bread", "water", "coffee"]
-	for item_id in ids:
+	for item_id in ["meal_rice", "bread", "water", "coffee"]:
 		var item := InventoryManager.get_item(item_id)
 		var button := Button.new()
 		button.custom_minimum_size = Vector2(0, 54)
@@ -233,14 +276,44 @@ func _build_shop_content() -> void:
 		button.tooltip_text = str(item.get("description", ""))
 		button.pressed.connect(_on_shop_buy.bind(item_id))
 		_modal_items.add_child(button)
-	var hint := _make_empty_label("放进包里就能随身带着。")
-	hint.add_theme_color_override("font_color", Color("#9eb8b3"))
-	_modal_items.add_child(hint)
+	_modal_items.add_child(_make_empty_label("放进包里就能随身带着。"))
+
+func _build_market_content() -> void:
+	_clear_modal_items()
+	var entries := InventoryManager.get_giftable_lines()
+	if entries.is_empty():
+		_modal_items.add_child(_make_empty_label("今天没有能拿来换钱或送人的旧物。"))
+		return
+	for entry in entries:
+		var button := Button.new()
+		button.custom_minimum_size = Vector2(0, 54)
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.text = "%s  ×%d    ¥%d" % [entry["name"], entry["count"], int(entry["sell_price"])]
+		button.tooltip_text = str(entry["description"])
+		button.pressed.connect(_on_market_sell.bind(str(entry["id"])))
+		_modal_items.add_child(button)
+	_modal_items.add_child(_make_empty_label("稀有旧物留着送人，往往比卖掉更值得。"))
+
+func _build_collection_log_content() -> void:
+	_clear_modal_items()
+	var entries := CollectionManager.get_log_entries()
+	if entries.is_empty():
+		_modal_items.add_child(_make_empty_label("还没有认真翻过城市的角落。"))
+		return
+	for item in entries:
+		var rarity := CollectionManager.get_rarity_name(str(item.get("rarity", "common")))
+		var card := PanelContainer.new()
+		_style_panel(card, Color(0.06, 0.11, 0.12, 0.72), _rarity_panel_color(str(item.get("rarity", "common"))), 9)
+		var label := Label.new()
+		label.text = "%s · %s\n%s" % [rarity, item.get("name", ""), item.get("description", "")]
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.add_theme_color_override("font_color", Color("#dbe7df"))
+		card.add_child(label)
+		_modal_items.add_child(card)
 
 func _on_inventory_use(item_id: String) -> void:
 	if InventoryManager.use_item(item_id):
-		_build_inventory_content("")
-		_modal_subtitle.text = "东西都塞在一起，拿起来就能用。"
+		_build_inventory_content()
 
 func _on_shop_buy(item_id: String) -> void:
 	var item := InventoryManager.get_item(item_id)
@@ -251,30 +324,93 @@ func _on_shop_buy(item_id: String) -> void:
 		InventoryManager.add_item(item_id, 1)
 		show_notice("买到%s，装进包里了。" % item.get("name", item_id), "positive")
 
-func open_pause() -> void:
-	_build_pause_content()
-	_set_modal(ModalState.PAUSE, "先歇一下", "时间停在这里，外面暂时不会往前走。", true)
+func _on_market_sell(item_id: String) -> void:
+	if CollectionManager.sell_collectible(item_id):
+		_build_market_content()
+func _build_map_content() -> void:
+	_clear_modal_items()
+	var area_text := "出租屋 · 城中村街道 · 工业区工厂 · 街角便利店\n废品回收站 · 旧货市场 · 社区公园"
+	_modal_items.add_child(_make_empty_label(area_text))
+	_modal_items.add_child(_make_empty_label("今天的天气：%s\n%s" % [WeatherSystem.get_weather_name(), WeatherSystem.get_description()]))
+
+func _build_bank_content() -> void:
+	_clear_modal_items()
+	_modal_items.add_child(_make_empty_label("手上的现金：¥%d" % GameState.money))
+	_modal_items.add_child(_make_empty_label("下一次房租日期：第 %d 天\n欠下的房租：%s" % [
+		((TimeSystem.current_day / GameState.rent_interval_days) + 1) * GameState.rent_interval_days,
+		"还没有拖欠" if GameState.rent_arrears == 0 else "¥%d" % GameState.rent_arrears,
+	]))
+	_modal_items.add_child(_make_empty_label("这个月的进账大约 ¥%d，花出去大约 ¥%d。" % [ProgressionManager.month_earned, ProgressionManager.month_spent]))
+
+func _build_dialogue_content(line: String) -> void:
+	_clear_modal_items()
+	var relation := Label.new()
+	relation.text = "现在的关系：%s" % RelationshipManager.get_affinity_label(_active_npc_id)
+	relation.add_theme_color_override("font_color", Color("#9fc6bb"))
+	_modal_items.add_child(relation)
+	_modal_items.add_child(_make_empty_label(line))
+	var gift_button := Button.new()
+	gift_button.text = "拿一件旧物当礼物"
+	gift_button.custom_minimum_size = Vector2(0, 50)
+	gift_button.pressed.connect(_build_gift_content)
+	_modal_items.add_child(gift_button)
+
+func _build_gift_content() -> void:
+	_clear_modal_items()
+	var entries := InventoryManager.get_giftable_lines()
+	if entries.is_empty():
+		_modal_items.add_child(_make_empty_label("包里没有适合送人的旧物。"))
+		return
+	for entry in entries:
+		var button := Button.new()
+		button.custom_minimum_size = Vector2(0, 52)
+		button.text = "%s  ×%d" % [entry["name"], entry["count"]]
+		button.pressed.connect(_on_gift_selected.bind(str(entry["id"])))
+		_modal_items.add_child(button)
+
+func _on_gift_selected(item_id: String) -> void:
+	var result := RelationshipManager.give_item(_active_npc_id, item_id)
+	show_notice(str(result.get("message", "")), "positive" if bool(result.get("ok", false)) else "warning")
+	if bool(result.get("ok", false)):
+		open_dialogue(_active_npc_id)
+	else:
+		_build_gift_content()
+
+func _build_month_summary_content(summary: Dictionary) -> void:
+	_clear_modal_items()
+	var arrears_text := "没有拖欠" if int(summary.get("arrears", 0)) == 0 else "还差 ¥%d" % int(summary.get("arrears", 0))
+	var text := "这个月赚了 ¥%d，花了 ¥%d。\n工作了 %d 天，和城里的人来往了 %d 次。\n捡到旧物 %d 件，房租：%s。" % [
+		int(summary.get("earned", 0)), int(summary.get("spent", 0)),
+		int(summary.get("workdays", 0)), int(summary.get("social", 0)),
+		int(summary.get("collected", 0)), arrears_text,
+	]
+	_modal_items.add_child(_make_empty_label(text))
+	var continue_button := Button.new()
+	continue_button.text = "继续过日子"
+	continue_button.custom_minimum_size = Vector2(0, 50)
+	continue_button.pressed.connect(_close_modal)
+	_modal_items.add_child(continue_button)
 
 func _build_pause_content() -> void:
 	_clear_modal_items()
 	var resume := Button.new()
 	resume.text = "继续生活"
-	resume.custom_minimum_size = Vector2(0, 54)
+	resume.custom_minimum_size = Vector2(0, 52)
 	resume.pressed.connect(_close_modal)
 	_modal_items.add_child(resume)
 	var save_button := Button.new()
 	save_button.text = "保存进度"
-	save_button.custom_minimum_size = Vector2(0, 54)
+	save_button.custom_minimum_size = Vector2(0, 52)
 	save_button.pressed.connect(func() -> void: SaveManager.save_game(true))
 	_modal_items.add_child(save_button)
-	var quit_button := Button.new()
-	quit_button.text = "保存并回到桌面"
-	quit_button.custom_minimum_size = Vector2(0, 54)
-	quit_button.pressed.connect(func() -> void:
+	var menu_button := Button.new()
+	menu_button.text = "保存并回到主菜单"
+	menu_button.custom_minimum_size = Vector2(0, 52)
+	menu_button.pressed.connect(func() -> void:
 		SaveManager.save_game(false)
-		get_tree().quit()
+		return_to_menu_requested.emit()
 	)
-	_modal_items.add_child(quit_button)
+	_modal_items.add_child(menu_button)
 
 func _set_modal(state: ModalState, title: String, subtitle: String, pause_clock: bool = false) -> void:
 	_modal_state = state
@@ -291,14 +427,13 @@ func _close_modal() -> void:
 	if _modal_state == ModalState.NONE:
 		return
 	_modal_state = ModalState.NONE
-	_modal_shop_id = ""
+	_active_npc_id = ""
 	_modal_panel.visible = false
 	GameState.input_locked = false
 	if was_pause:
 		TimeSystem.set_paused(false)
 	modal_changed.emit(false)
 	_clear_modal_items()
-
 func _clear_modal_items() -> void:
 	for child in _modal_items.get_children():
 		child.queue_free()
@@ -314,18 +449,42 @@ func _on_money_changed(amount: int) -> void:
 	_money_label.text = "¥ %d" % amount
 
 func _update_clock() -> void:
-	_time_label.text = "%s · %s" % [TimeSystem.get_day_name(), TimeSystem.get_time_text()]
+	_time_label.text = "第 %d 天 · %s · %s" % [TimeSystem.current_day, TimeSystem.get_day_name(), TimeSystem.get_time_text()]
+
+func _on_weather_changed(_weather_id: String) -> void:
+	_weather_label.text = WeatherSystem.get_weather_name()
 
 func _apply_ambient_state() -> void:
 	var sleep_dim := GameState.get_visual_dim() * 0.46
 	var night_dim := (1.0 - TimeSystem.get_daylight()) * 0.22
-	_ambient_overlay.color = Color(0.025, 0.06, 0.09, clampf(sleep_dim + night_dim, 0.0, 0.58))
+	var weather_tint := WeatherSystem.get_tint()
+	var weather_alpha := 0.08 if WeatherSystem.current_weather_id in ["rain", "humid", "overcast"] else 0.035
+	_set_ambient_color(Color(
+		weather_tint.r * 0.25 + 0.018,
+		weather_tint.g * 0.25 + 0.045,
+		weather_tint.b * 0.25 + 0.06,
+		clampf(sleep_dim + night_dim + weather_alpha, 0.0, 0.62)
+	))
+
+func _set_ambient_color(color: Color) -> void:
+	_ambient_overlay.color = color
 
 func _on_pause_changed(is_paused: bool) -> void:
 	if is_paused:
 		_context_panel.visible = false
 	elif not _context_label.text.is_empty():
 		_context_panel.visible = true
+
+func _rarity_panel_color(rarity: String) -> Color:
+	match rarity:
+		"legendary":
+			return Color(1.0, 0.78, 0.28, 0.82)
+		"rare":
+			return Color(0.45, 0.82, 0.92, 0.7)
+		"uncommon":
+			return Color(0.58, 0.83, 0.49, 0.65)
+		_:
+			return Color(0.72, 0.72, 0.65, 0.42)
 
 func _notice_color(tone: String) -> Color:
 	match tone:

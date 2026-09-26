@@ -1,0 +1,13 @@
+item_id,name,description,rarity,sell_price,energy,gift_npc,displayable
+old_bottle,旧汽水瓶,瓶身磨花了，还留着上世纪的绿色玻璃光。,common,2,0,,false
+newspaper,旧报纸,日期已经看不清，夹着一段城中村旧闻。,common,3,0,,false
+metal_part,五金小件,沉甸甸的小零件，修东西时或许派得上用场。,common,5,0,chen,false
+paperback,旧口袋书,书页发黄，角落留着陌生人的铅笔字。,uncommon,12,0,mei,true
+toy_car,铁皮小车,掉了一点漆，轮子居然还能转。,uncommon,15,0,lin,true
+old_radio,旧收音机,拧动旋钮时会发出沙沙声。,uncommon,22,0,chen,true
+film_camera,旧胶片相机,取景框里还能看见这座城市。,rare,65,0,lin,true
+vinyl_record,绝版黑胶,封套边角压皱了，旋律仍然完整。,rare,78,0,mei,true
+workshop_badge,老厂徽章,背面刻着一个已经停产的车间编号。,rare,88,0,wang,true
+pocket_watch,老怀表,停走的指针停在某个平常的下午。,legendary,260,0,chen,true
+sea_glass,深南蓝玻璃,雨后才会发亮的蓝色旧玻璃，像一小块海。,legendary,240,0,mei,true
+first_ticket,第一张车票,来自许多人抵达这座城市的第一天。,legendary,300,0,lin,true

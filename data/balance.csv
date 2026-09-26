@@ -4,4 +4,13 @@ rent_amount,800,yuan,每期房租
 rent_interval_days,30,day,房租周期
 factory_wage,180,yuan,单次工厂班次工资
 factory_shift_minutes,480,minute,单次班次游戏时长
-factory_energy_cost,32,energy,单次班次体力消耗
+factory_energy_cost,32,energy,单次班次基础体力消耗
+clerk_wage,95,yuan,便利店兼职工资
+clerk_shift_minutes,300,minute,便利店兼职时长
+clerk_energy_cost,20,energy,便利店兼职基础体力消耗
+study_minutes,120,minute,单次学习时长
+study_energy_cost,10,energy,单次学习基础体力消耗
+exercise_minutes,90,minute,单次锻炼时长
+exercise_energy_cost,18,energy,单次锻炼基础体力消耗
+collection_energy_cost,2,energy,单次摸金基础体力消耗
+daily_collection_points,16,point,全城每日基础刷新点数量

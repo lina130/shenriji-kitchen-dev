@@ -17,6 +17,12 @@ func _draw() -> void:
 			_draw_factory()
 		"store":
 			_draw_store()
+		"recycle":
+			_draw_recycle()
+		"market":
+			_draw_market()
+		"park":
+			_draw_park()
 		_:
 			draw_rect(Rect2(0, 0, 1280, 720), Color("#17242b"))
 
@@ -70,6 +76,40 @@ func _draw_store() -> void:
 		draw_line(Vector2(x + 16, 504), Vector2(x + 114, 504), Color("#d9eee7"), 5.0)
 	draw_line(Vector2(34, 200), Vector2(1246, 200), Color("#2f5961"), 4.0)
 
+func _draw_recycle() -> void:
+	draw_rect(Rect2(0, 0, 1280, 720), Color("#70756c"))
+	_draw_floor_grid(Color(0.29, 0.31, 0.29, 0.5), 64)
+	_draw_walls(Color("#303b39"))
+	for x in range(90, 1160, 260):
+		draw_rect(Rect2(x, 100, 150, 110), Color("#62726b"))
+		draw_rect(Rect2(x + 18, 118, 110, 72), Color("#384a46"))
+	draw_rect(Rect2(70, 410, 300, 180), Color("#59665e"))
+	draw_rect(Rect2(910, 410, 300, 180), Color("#59665e"))
+	for index in range(6):
+		draw_circle(Vector2(125 + index * 48, 465 + (index % 2) * 42), 26.0, Color("#839080"))
+	draw_line(Vector2(60, 320), Vector2(1220, 320), Color("#a8aa91"), 4.0)
+
+func _draw_market() -> void:
+	draw_rect(Rect2(0, 0, 1280, 720), Color("#bc9f78"))
+	_draw_floor_grid(Color(0.38, 0.32, 0.25, 0.28), 64)
+	_draw_walls(Color("#493c35"))
+	for x in range(70, 1240, 220):
+		draw_rect(Rect2(x, 70, 170, 110), Color("#d4745f"))
+		draw_rect(Rect2(x + 20, 92, 130, 66), Color("#f2d18d"))
+	for x in range(100, 1200, 250):
+		draw_rect(Rect2(x, 380, 150, 90), Color("#795f45"))
+		draw_rect(Rect2(x + 14, 394, 122, 20), Color("#e5bd69"))
+	draw_line(Vector2(40, 270), Vector2(1240, 270), Color("#8b6c4d"), 3.0)
+
+func _draw_park() -> void:
+	draw_rect(Rect2(0, 0, 1280, 720), Color("#5f8666"))
+	draw_ellipse(Vector2(640, 390), 270.0, 145.0, Color("#6fa9aa"), true)
+	draw_ellipse(Vector2(640, 390), 235.0, 115.0, Color("#82b9b3"), true)
+	draw_rect(Rect2(0, 250, 1280, 130), Color("#a7a584"))
+	for x in range(80, 1240, 180):
+		draw_circle(Vector2(x, 130 + (x % 3) * 30), 44.0, Color("#3e6c52"))
+		draw_rect(Rect2(x - 7, 160, 14, 70), Color("#684d39"))
+	_draw_walls(Color("#315246"))
 func _draw_floor_grid(color: Color, step: int) -> void:
 	for x in range(0, 1281, step):
 		draw_line(Vector2(x, 0), Vector2(x, 720), color, 1.0)

@@ -1,0 +1,5 @@
+npc_id,name,role,home_area,preferred_item,color
+mei,梅姨,房东和邻里,home,sea_glass,#d98a83
+wang,王师傅,工厂组长,factory,workshop_badge,#83b9b2
+lin,小林,便利店店员,store,film_camera,#e8bd66
+chen,陈伯,旧货行老板,market,pocket_watch,#9da6c4

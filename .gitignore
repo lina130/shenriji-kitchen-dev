@@ -23,3 +23,8 @@ Thumbs.db
 # Godot CSV translation side effects
 data/*.translation
 data/*.csv.import
+
+# Generated release copies and packages
+data/*.csv.txt
+release/
+docs/*.png.import

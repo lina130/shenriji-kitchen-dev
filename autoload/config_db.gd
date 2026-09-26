@@ -5,7 +5,10 @@ var tables: Dictionary = {}
 
 func _ready() -> void:
 	_load_table("items", "res://data/items.csv", "item_id")
+	_load_table("collectibles", "res://data/collectibles.csv", "item_id")
 	_load_table("balance", "res://data/balance.csv", "key")
+	_load_table("weather", "res://data/weather.csv", "weather_id")
+	_load_table("npcs", "res://data/npcs.csv", "npc_id")
 
 func get_rows(table_name: String) -> Dictionary:
 	return tables.get(table_name, {})
@@ -22,7 +25,10 @@ func get_number(table_name: String, row_key: String, fallback: float) -> float:
 
 func _load_table(table_name: String, path: String, key_field: String) -> void:
 	var rows: Dictionary = {}
-	var file := FileAccess.open(path, FileAccess.READ)
+	var resolved_path := path
+	if not FileAccess.file_exists(resolved_path):
+		resolved_path = path + ".txt"
+	var file := FileAccess.open(resolved_path, FileAccess.READ)
 	if file == null:
 		push_warning("配置表无法读取：%s" % path)
 		tables[table_name] = rows

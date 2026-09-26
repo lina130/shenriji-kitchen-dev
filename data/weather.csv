@@ -1,0 +1,6 @@
+weather_id,name,description,collection_bonus,work_energy_multiplier,store_sales_bonus,tint,weight
+sunny,晴,阳光干净，街上晒得发亮。,0.0,1.0,1.0,#ffe0a3,36
+overcast,阴,云层压得低，风里有一点潮。,0.01,1.0,1.0,#aebcc2,24
+rain,小雨,雨丝落在骑楼和雨棚上，路面反着灯光。,0.08,1.08,1.12,#7895a6,18
+humid,回南天,墙角和楼梯扶手都潮乎乎的。,0.04,1.12,0.96,#91aaa4,12
+heat,酷暑,蝉声很响，走动一会儿就想找阴凉。,0.0,1.22,1.18,#ffbd72,10

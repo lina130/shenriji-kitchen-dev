@@ -4,7 +4,7 @@ signal game_loaded
 signal game_saved
 
 const SAVE_PATH := "user://deep_city_save.json"
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
 
 func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
@@ -17,6 +17,10 @@ func save_game(show_notice: bool = true) -> bool:
 		"game": GameState.get_save_data(),
 		"inventory": InventoryManager.get_save_data(),
 		"random": RandomManager.get_save_data(),
+		"weather": WeatherSystem.get_save_data(),
+		"collection": CollectionManager.get_save_data(),
+		"progression": ProgressionManager.get_save_data(),
+		"relationships": RelationshipManager.get_save_data(),
 	}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
@@ -50,6 +54,10 @@ func load_game(show_notice: bool = true) -> bool:
 	GameState.restore(data.get("game", {}))
 	InventoryManager.restore(data.get("inventory", {}))
 	RandomManager.restore(data.get("random", {}))
+	WeatherSystem.restore(data.get("weather", {}))
+	CollectionManager.restore(data.get("collection", {}))
+	ProgressionManager.restore(data.get("progression", {}))
+	RelationshipManager.restore(data.get("relationships", {}))
 	SceneRouter.restore(GameState.current_area, GameState.spawn_id)
 	game_loaded.emit()
 	if show_notice:

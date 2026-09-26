@@ -47,6 +47,16 @@ func sleep_to_next_morning(hour: int = 7) -> void:
 	day_started.emit(current_day)
 	minute_changed.emit(minute_of_day)
 
+func reset_new_game() -> void:
+	current_day = 1
+	minute_of_day = 7 * 60
+	_minute_accumulator = 0.0
+	_late_night_reported = false
+	paused = false
+	day_started.emit(current_day)
+	minute_changed.emit(minute_of_day)
+	paused_changed.emit(false)
+
 func set_paused(value: bool) -> void:
 	if paused == value:
 		return
