@@ -317,7 +317,7 @@ Write-Host "ALL_SELECTED_TESTS_PASS"
 | A6 | 无命中 → fallback | `-ChangedFiles CHANGELOG.md -DryRun` | `gates` 含 `smoke-test`、`world-systems` |
 | A7 | release 模式跑全七项 | `.\run_tests.ps1 -Mode release -DryRun` | `gates` 长度 = 7，且含 `playtest` |
 | A8 | 门禁失败传播 | 临时把 `scene_check.gd` 的 `quit(0)` 改 `quit(1)` | 退出码 ≠0，后续门禁不执行 |
-| A9 | user-data-dir 隔离 | 跑完后检查 `%APPDATA%\Godot\app_userdata\深城日常` | 无新增文件 |
+| A9 | user-data-dir 隔离 | 跑完后检查 `%APPDATA%\Godot\app_userdata\深日记` | 无新增文件 |
 | A10 | 计划可审计 | 每次运行后 `artifacts/test_plan.json` 存在且含 `hits` | `hits[].rule` 与改动文件对应 |
 
 ---
@@ -914,7 +914,7 @@ $rx = $rx -replace '\\\*\\\*', '.*' -replace '\\\*', '[^/]*'
 - 主方案：所有门禁共用 `.tools/test_userdata`。**并行时（独立方案 §4.2）每个测试用 `.tools/test_userdata_$t`**，但主方案串行共用——`stress-test` 写存档后 `smoke-test` 读到脏存档，**测试间污染**。
 - 独立方案：并行用独立目录，**串行时共用 `$testData`**——同样污染。
 - 两份方案都**没清理** user-data-dir。跑 100 次后 `.tools/test_userdata` 累积垃圾，且**上次失败的存档会影响下次**。
-- 两份方案都**没验证** Godot 是否真的用了 `--user-data-dir`。Godot 4.2 的 `--user-data-dir` 参数**存在**，但若路径含空格或中文，可能静默失败回退到 `%APPDATA%`。主方案 A9 断言"跑完后 `%APPDATA%\Godot\app_userdata\深城日常` 无新增文件"——**但没测路径含空格的情况**。
+- 两份方案都**没验证** Godot 是否真的用了 `--user-data-dir`。Godot 4.2 的 `--user-data-dir` 参数**存在**，但若路径含空格或中文，可能静默失败回退到 `%APPDATA%`。主方案 A9 断言"跑完后 `%APPDATA%\Godot\app_userdata\深日记` 无新增文件"——**但没测路径含空格的情况**。
 
 **返工要求**：
 1. 每个门禁用**独立** user-data-dir：`.tools/test_userdata/<gate>`。
@@ -1007,7 +1007,7 @@ Godot `--headless` 跑测试时若死循环，**永不退出**。CI 会挂到超
 
 ### C14. 主方案的 A9 断言不可执行
 
-> A9 | user-data-dir 隔离 | 跑完后检查 `%APPDATA%\Godot\app_userdata\深城日常` | 无新增文件
+> A9 | user-data-dir 隔离 | 跑完后检查 `%APPDATA%\Godot\app_userdata\深日记` | 无新增文件
 
 **"无新增文件"需要基线快照**。方案没说要先快照。且 `%APPDATA%` 在 CI（Linux）上不存在。**断言不可执行。**
 

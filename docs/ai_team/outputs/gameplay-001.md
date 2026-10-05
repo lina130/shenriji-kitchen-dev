@@ -2,7 +2,7 @@
 
 ## 主方案
 
-# 《深城日常》一周可玩性闭环与经济循环审计
+# 《深日记》一周可玩性闭环与经济循环审计
 
 > 主方案 Agent 输出。以资深策划视角，对首日→首周的可玩性闭环与经济循环做审计，找出**无效系统、收益断层、无事可做时段**，输出**最小改动优先级**。
 > 所有结论基于共享黑板已裁决方案 + `data/balance.csv` + `data/business.csv` + `data/calendar.csv` + `career_manager.gd` + `farm_manager.gd` 现有实现。
@@ -263,7 +263,7 @@ grep -rn "save_version\|SAVE_VERSION\|migrate" --include=*.gd autoload/save_mana
 
 ## 独立方案
 
-# 《深城日常》首日→首周可玩性闭环与经济循环审计
+# 《深日记》首日→首周可玩性闭环与经济循环审计
 
 > 独立方案 Agent 输出。不迎合主方案，以资深策划视角做**逆向审计**：先证伪"闭环存在"，再给最小改动。
 > 所有结论基于黑板已有数据（balance.csv / business.csv / calendar.csv / career_manager.gd / farm_manager.gd），未验证项标注 `[需确认]`。
@@ -747,7 +747,7 @@ grep -rn "inventory\|restaurant_stock" autoload/ --include=*.gd
 
 ## 综合决策
 
-# 《深城日常》一周可玩性闭环与经济循环审计 —— 最终可执行方案
+# 《深日记》一周可玩性闭环与经济循环审计 —— 最终可执行方案
 
 > 综合决策 Agent 输出。合并主方案、独立方案与批判意见，产出**唯一可执行方案**。
 > 裁决原则：**批判意见优先于两份原方案**；冲突项以"可验证性 + 首周留存"为裁决标准。

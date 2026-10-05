@@ -1,4 +1,4 @@
-# 《深城日常》0.5.0 发行说明
+# 《深日记》0.5.0 发行说明
 
 ## 本轮交付收尾
 
@@ -371,8 +371,8 @@
 
 ## 首版交付记录（2026-09-27 18:5x +08:00）
 
-- Windows 构建：`release/windows/深城日常.exe`
-- 桌面副本：`C:\Users\18257\Desktop\深城日常_最新版.exe`
+- Windows 构建：`release/windows/深日记.exe`
+- 桌面副本：`C:\Users\18257\Desktop\深日记_最新版.exe`
 - 文件大小：116,745,048 bytes
 - SHA256：`F2A893D850FF0870CF4D6E73FD9EE1BCFC3C0268EEA4F8BE93C7F716F2580B02`
 - 桌面副本与发布目录哈希一致。

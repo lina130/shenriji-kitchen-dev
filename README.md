@@ -1,4 +1,4 @@
-# 深城日常
+# 深日记
 
 ## 一键试玩：深圳湾人才公园湖畔餐馆
 
@@ -18,9 +18,9 @@ WASD 移动；左键前往/互动；E 与附近物件互动；滚轮缩放；按
 
 ## 发行包
 
-`release\深城日常_0.5.0_win64.zip`
+`release\深日记_0.5.0_win64.zip`
 
-解压后双击 `深城日常.exe`，无需安装 Godot。
+解压后双击 `深日记.exe`，无需安装 Godot。
 
 ## 核心赚钱循环
 
@@ -117,7 +117,7 @@ WASD 移动；左键前往/互动；E 与附近物件互动；滚轮缩放；按
 ## 仓库结构
 
 ```text
-深城日常/
+深日记/
 ├─ project.godot            Godot 4.7 工程配置（主入口）
 ├─ export_presets.cfg       Windows 导出预设（已排除 tests/docs/tools/output/Godot）
 ├─ icon.svg                 应用图标

@@ -2,7 +2,7 @@
 
 ## 主方案
 
-# 《深城日常》服装购买 / 试衣 / 穿搭 / 衣柜系统 —— 唯一可执行方案
+# 《深日记》服装购买 / 试衣 / 穿搭 / 衣柜系统 —— 唯一可执行方案
 
 > 综合裁决：以「场景实物 + NPC 驱动」为唯一购买路径，**禁止任何菜单直购**。复用现有 `WardrobeManager`（`relationship_manager.gd` 已引用 `WardrobeManager.owned`，说明该类已存在或必须补齐）、`InventoryManager`、`RelationshipManager`、`NoticeManager`、`TimeSystem`、`CalendarManager`、`EconomyManager`（若存在）。
 > 本方案不新增 NPC，服装店老板固定为 `azhen`（阿珍，`home_area=store`，`preferred_item=milk_tea`）。
@@ -1510,7 +1510,7 @@ func test_wardrobe_sort():
 
 ## 综合决策
 
-# 《深城日常》服装购买 / 试衣 / 穿搭 / 衣柜系统 —— 唯一可执行方案（终版）
+# 《深日记》服装购买 / 试衣 / 穿搭 / 衣柜系统 —— 唯一可执行方案（终版）
 
 > 综合裁决：以「场景实物 + NPC 驱动」为唯一购买路径，**禁止菜单直购**。融合主方案的数据层完整度与独立方案的"服装是穿戴态不是持有态"哲学，采纳批判 A/B 的全部 P0 阻塞项作为前置门禁，P1 设计缺陷全部修正，P2 测试改为可证伪断言。
 >

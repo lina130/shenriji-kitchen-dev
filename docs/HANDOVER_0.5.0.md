@@ -1,4 +1,4 @@
-# 《深城日常》0.5.0 交接文档
+# 《深日记》0.5.0 交接文档
 
 > 给接手的人/模型：先读这份，再读 `docs/DESIGN_0.5.0_pipeline_and_staff.md`。
 > 项目当前是「0.4.0 已发行 + 0.5.0 大量未提交改动」的中间状态。
@@ -7,10 +7,10 @@
 
 ## 1. 项目基本情况
 
-- 路径：`C:\Users\18257\Desktop\深城日常`
+- 路径：`C:\Users\18257\Desktop\深日记`
 - 引擎：Godot 4.7.2（便携版在 `.tools/godot/`）
 - 类型：2D 都市生活经营模拟（深圳城中村题材），GDScript
-- 桌面最新版：`C:\Users\18257\Desktop\深城日常_最新版.exe`（已更新为 0.5.0，哈希与 release/windows 版本一致）
+- 桌面最新版：`C:\Users\18257\Desktop\深日记_最新版.exe`（已更新为 0.5.0，哈希与 release/windows 版本一致）
 - 构建设计约定：`build_release.ps1` 跑测试 → 导出 → 复制到桌面最新版 → 打 zip 到 `release/`
 
 ### 怎么跑测试

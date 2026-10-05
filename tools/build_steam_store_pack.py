@@ -69,7 +69,7 @@ def save_text(text: str, path: Path) -> None:
     path.write_text(text, encoding="utf-8")
 
 def write_store_copy() -> None:
-    zh = "# 深城日常\n\n一款无强制主线、无数值属性面板的深圳都市生活模拟游戏。\n\n从城中村一间出租屋开始，打工、学手艺、摆摊、开店、种地、养鸡、钓鱼、旅行、认识街坊，慢慢把日子过起来。\n\n## 特色\n\n- 餐饮多工序实时经营。\n- 早市、午市、晚市独立菜单。\n- 100 件城市收藏物。\n- 招聘、员工诉求、培养、离职和留人。\n- 餐饮与工厂职业线。\n- 农场种植和养殖。\n- 18 个以上生活场景和限时 NPC。\n- 13 个全年节日。\n- 轻量合作房间。\n\n当前版本为 0.5.0 开发版，正式美术、Steamworks SDK、完整联机经济同步仍在持续制作。\n"
+    zh = "# 深日记\n\n一款无强制主线、无数值属性面板的深圳都市生活模拟游戏。\n\n从城中村一间出租屋开始，打工、学手艺、摆摊、开店、种地、养鸡、钓鱼、旅行、认识街坊，慢慢把日子过起来。\n\n## 特色\n\n- 餐饮多工序实时经营。\n- 早市、午市、晚市独立菜单。\n- 100 件城市收藏物。\n- 招聘、员工诉求、培养、离职和留人。\n- 餐饮与工厂职业线。\n- 农场种植和养殖。\n- 18 个以上生活场景和限时 NPC。\n- 13 个全年节日。\n- 轻量合作房间。\n\n当前版本为 0.5.0 开发版，正式美术、Steamworks SDK、完整联机经济同步仍在持续制作。\n"
     en = "# Deep City Daily\n\nA no-quest, no-stat-panel life simulation set in a contemporary southern Chinese city.\n\nStart from a small rented room, work shifts, learn skills, run a food stall or restaurant, farm, keep animals, fish, travel, collect forgotten objects, and build a life at your own pace.\n\n## Features\n\n- Multi-stage real-time food production.\n- Separate morning, lunch, and dinner menus.\n- More than 100 city collectibles.\n- Staff hiring, morale, fatigue, resignation, and retention.\n- Restaurant and factory career lines.\n- Farming and livestock.\n- More than 18 life scenes and limited-time NPCs.\n- 13 yearly festivals.\n- Lightweight co-op rooms.\n\nCurrent build: 0.5.0 development build. Final art, the Steamworks SDK, and full co-op economy synchronization are still in progress.\n"
     save_text(zh, OUT / "store_description_zh.md")
     save_text(en, OUT / "store_description_en.md")
@@ -129,9 +129,9 @@ def main() -> None:
     street = scene_image("street")
     restaurant = scene_image("restaurant")
     farm = scene_image("farm")
-    make_capsule(street, (616, 353), "深城日常", "DEEP CITY DAILY", 48, 20, OUT / "capsule_header_616x353.png")
-    make_capsule(farm, (231, 87), "深城日常", "DEEP CITY DAILY", 22, 9, OUT / "capsule_small_231x87.png")
-    make_capsule(restaurant, (1920, 620), "深城日常", "DEEP CITY DAILY", 92, 32, OUT / "capsule_main_1920x620.png")
+    make_capsule(street, (616, 353), "深日记", "DEEP CITY DAILY", 48, 20, OUT / "capsule_header_616x353.png")
+    make_capsule(farm, (231, 87), "深日记", "DEEP CITY DAILY", 22, 9, OUT / "capsule_small_231x87.png")
+    make_capsule(restaurant, (1920, 620), "深日记", "DEEP CITY DAILY", 92, 32, OUT / "capsule_main_1920x620.png")
     save(cover(street, (1280, 720)).convert("RGB"), OUT / "screenshot_street_1280x720.png")
     save(cover(restaurant, (1280, 720)).convert("RGB"), OUT / "screenshot_restaurant_1280x720.png")
     save(cover(farm, (1280, 720)).convert("RGB"), OUT / "screenshot_farm_1280x720.png")

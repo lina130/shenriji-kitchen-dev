@@ -54,7 +54,7 @@ func _build_interface() -> void:
 	content.add_theme_constant_override("separation", 12)
 	_root.add_child(content)
 	var title := Label.new()
-	title.text = "深城日常"
+	title.text = "深日记"
 	title.add_theme_font_size_override("font_size", 68)
 	title.add_theme_color_override("font_color", Color("#35645F"))
 	content.add_child(title)

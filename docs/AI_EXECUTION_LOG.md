@@ -710,7 +710,7 @@
 - 修正旧版字典背包到格位背包的迁移：旧档会重建格位并按需要保留扩容等级，不再随物品名称自动重排。
 - 相关验证：--world-systems、--scene-check、--smoke-test、真实窗口 120 步 Playtest 全部通过；本轮未重复跑无关全量测试。
 - Windows 发布版重新导出并覆盖桌面最新版，两端 SHA256 一致：C97702F2078F39209671B9E49A7A9DDD4A449E716C1C0F8AF01363647A864391。
-- 桌面版：C:\Users\18257\Desktop\深城日常_最新版.exe；发布版：C:\Users\18257\Desktop\深城日常\release\windows\深城日常.exe。
+- 桌面版：C:\Users\18257\Desktop\深日记_最新版.exe；发布版：C:\Users\18257\Desktop\深日记\release\windows\深日记.exe。
 
 ## 2026-09-27 自动开发运行 75
 
@@ -849,7 +849,7 @@
 - AudioManager 自动优先读取 assets/audio/formal，基线音频作为回退。
 - world-systems、scene-check、smoke-test 单独通过。
 - Windows 发布版重新导出，发布版 SHA256=AF53D18413E6855BD5960D5F50DC0ADB6A9F3DB83980E84F51C27FD2949FD99A。
-- 桌面“深城日常_最新版.exe”被运行中进程占用，无法覆盖；最新版已写入“深城日常_最新版_待替换.exe”。
+- 桌面“深日记_最新版.exe”被运行中进程占用，无法覆盖；最新版已写入“深日记_最新版_待替换.exe”。
 
 ## 2026-09-27 自动开发运行 94
 

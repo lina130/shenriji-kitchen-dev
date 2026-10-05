@@ -1,4 +1,4 @@
-# 《深城日常》本地模组接口
+# 《深日记》本地模组接口
 
 当前版本支持对配置表进行安全的数据扩展，不加载第三方脚本。
 
@@ -10,7 +10,7 @@
 
 实际 Windows 路径通常为：
 
-`%APPDATA%\Godot\app_userdata\深城日常\mods\<mod_id>\`
+`%APPDATA%\Godot\app_userdata\深日记\mods\<mod_id>\`
 
 ## mod.json
 

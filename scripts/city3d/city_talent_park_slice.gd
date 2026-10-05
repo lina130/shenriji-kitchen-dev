@@ -77,7 +77,7 @@ func _ready() -> void:
 					previewing = true
 			if not previewing:
 				DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_MAXIMIZED)
-		DisplayServer.window_set_title("深城日常 · 人才公园餐馆试玩")
+		DisplayServer.window_set_title("深日记 · 人才公园餐馆试玩")
 	_build_lighting()
 	AudioManager.play_music("park_ambient")
 	park = load("res://scripts/city3d/city_talent_park.gd").new()

@@ -4,7 +4,7 @@ import math
 import random
 import wave
 
-ROOT = Path(r"C:\Users\18257\Desktop\深城日常\assets\audio")
+ROOT = Path(r"C:\Users\18257\Desktop\深日记\assets\audio")
 RATE = 22050
 random.seed(20260926)
 

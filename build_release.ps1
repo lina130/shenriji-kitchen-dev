@@ -56,14 +56,14 @@ if (Get-Command python -ErrorAction SilentlyContinue) {
 }
 
 Write-Host "导出 Windows 发布版..."
-& $godotPath --headless --path $root --export-release "Windows Desktop" "release/windows/深城日常.exe"
+& $godotPath --headless --path $root --export-release "Windows Desktop" "release/windows/深日记.exe"
 if ($LASTEXITCODE -ne 0) { throw "Godot 导出失败。" }
 
 $readme = @"
-《深城日常》垂直切片 ${version}
+《深日记》垂直切片 ${version}
 
 运行：
-双击“深城日常.exe”。
+双击“深日记.exe”。
 
 操作：
 WASD / 方向键移动
@@ -129,18 +129,18 @@ Copy-Item -LiteralPath (Join-Path $root "docs\RELEASE_NOTES_0.5.0.md") -Destinat
 Copy-Item -LiteralPath (Join-Path $root "docs\KNOWN_ISSUES.md") -Destination (Join-Path $windowsDir "已知问题.md") -Force
 Copy-Item -LiteralPath (Join-Path $root "docs\游戏预览_0.4.0.png") -Destination (Join-Path $windowsDir "游戏预览.png") -Force
 
-$exePath = Join-Path $windowsDir "深城日常.exe"
-$latestExePath = Join-Path ([Environment]::GetFolderPath("Desktop")) "深城日常_最新版.exe"
+$exePath = Join-Path $windowsDir "深日记.exe"
+$latestExePath = Join-Path ([Environment]::GetFolderPath("Desktop")) "深日记_最新版.exe"
 Copy-Item -LiteralPath $exePath -Destination $latestExePath -Force
 $hash = Get-FileHash -LiteralPath $exePath -Algorithm SHA256
 $latestHash = Get-FileHash -LiteralPath $latestExePath -Algorithm SHA256
 if ($hash.Hash -ne $latestHash.Hash) { throw "桌面最新版哈希与发布版不一致。" }
-$hashLine = "$($hash.Hash)  深城日常.exe"
+$hashLine = "$($hash.Hash)  深日记.exe"
 Set-Content -LiteralPath (Join-Path $root "release\SHA256SUMS.txt") -Value $hashLine -Encoding utf8
 
-$zipPath = Join-Path $root "release\深城日常_${version}_win64.zip"
+$zipPath = Join-Path $root "release\深日记_${version}_win64.zip"
 $releaseFiles = @(
-    (Join-Path $windowsDir "深城日常.exe"),
+    (Join-Path $windowsDir "深日记.exe"),
     (Join-Path $windowsDir "运行说明.txt"),
     (Join-Path $windowsDir "发行说明.md"),
     (Join-Path $windowsDir "已知问题.md"),
@@ -148,7 +148,7 @@ $releaseFiles = @(
 )
 Compress-Archive -Path $releaseFiles -DestinationPath $zipPath -Force
 $zipHash = Get-FileHash -LiteralPath $zipPath -Algorithm SHA256
-Add-Content -LiteralPath (Join-Path $root "release\SHA256SUMS.txt") -Value "$($zipHash.Hash)  深城日常_${version}_win64.zip"
+Add-Content -LiteralPath (Join-Path $root "release\SHA256SUMS.txt") -Value "$($zipHash.Hash)  深日记_${version}_win64.zip"
 Write-Host "Steam 商店素材：$(Join-Path $root "release\steam_store")"
 Write-Host "发布包完成：$zipPath"
 Write-Host "桌面最新版：$latestExePath"

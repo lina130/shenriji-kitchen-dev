@@ -6,19 +6,19 @@
 
 项目根目录：
 
-  C:\Users\18257\Desktop\深城日常
+  C:\Users\18257\Desktop\深日记
 
 新增文件：
 
-  C:\Users\18257\Desktop\深城日常\tools\test_map.json
-  C:\Users\18257\Desktop\深城日常\tools\select_tests.py
-  C:\Users\18257\Desktop\深城日常\tools\run_selected_tests.ps1
-  C:\Users\18257\Desktop\深城日常\tools\test_selector_test.py
-  C:\Users\18257\Desktop\深城日常\docs\TEST_SELECTION.md
+  C:\Users\18257\Desktop\深日记\tools\test_map.json
+  C:\Users\18257\Desktop\深日记\tools\select_tests.py
+  C:\Users\18257\Desktop\深日记\tools\run_selected_tests.ps1
+  C:\Users\18257\Desktop\深日记\tools\test_selector_test.py
+  C:\Users\18257\Desktop\深日记\docs\TEST_SELECTION.md
 
 默认引擎：
 
-  C:\Users\18257\Desktop\深城日常\.tools\godot\Godot_v*-stable_win64_console.exe
+  C:\Users\18257\Desktop\深日记\.tools\godot\Godot_v*-stable_win64_console.exe
 
 脚本只查找项目便携目录里的 Godot 控制台版本，不会默认回退到系统 Godot。只有显式传入 -GodotPath 才会使用别的位置。
 
@@ -74,49 +74,49 @@ release 模式忽略 diff，固定执行：
 
 只生成计划，不执行编译和门禁：
 
-  pwsh -NoProfile -File C:\Users\18257\Desktop\深城日常\tools\run_selected_tests.ps1 -DryRun
+  pwsh -NoProfile -File C:\Users\18257\Desktop\深日记\tools\run_selected_tests.ps1 -DryRun
 
 本地工作区自动选择：
 
-  pwsh -NoProfile -File C:\Users\18257\Desktop\深城日常\tools\run_selected_tests.ps1
+  pwsh -NoProfile -File C:\Users\18257\Desktop\深日记\tools\run_selected_tests.ps1
 
 指定基线：
 
-  pwsh -NoProfile -File C:\Users\18257\Desktop\深城日常\tools\run_selected_tests.ps1 -Base origin/main
+  pwsh -NoProfile -File C:\Users\18257\Desktop\深日记\tools\run_selected_tests.ps1 -Base origin/main
 
 显式指定改动文件：
 
-  pwsh -NoProfile -File C:\Users\18257\Desktop\深城日常\tools\run_selected_tests.ps1 -ChangedFiles scenes/main.tscn
+  pwsh -NoProfile -File C:\Users\18257\Desktop\深日记\tools\run_selected_tests.ps1 -ChangedFiles scenes/main.tscn
 
 发布模式：
 
-  pwsh -NoProfile -File C:\Users\18257\Desktop\深城日常\tools\run_selected_tests.ps1 -Mode release
+  pwsh -NoProfile -File C:\Users\18257\Desktop\深日记\tools\run_selected_tests.ps1 -Mode release
 
 指定计划输出位置：
 
-  pwsh -NoProfile -File C:\Users\18257\Desktop\深城日常\tools\run_selected_tests.ps1 -DryRun -PlanPath .tools\my_test_plan.json
+  pwsh -NoProfile -File C:\Users\18257\Desktop\深日记\tools\run_selected_tests.ps1 -DryRun -PlanPath .tools\my_test_plan.json
 
 默认计划文件写在忽略目录：
 
-  C:\Users\18257\Desktop\深城日常\.tools\test_userdata\test_plan.json
+  C:\Users\18257\Desktop\深日记\.tools\test_userdata\test_plan.json
 
 ## 直接调用 Python 选择器
 
 只查看结果，不运行 Godot：
 
-  python C:\Users\18257\Desktop\深城日常\tools\select_tests.py --root C:\Users\18257\Desktop\深城日常 --local --json
+  python C:\Users\18257\Desktop\深日记\tools\select_tests.py --root C:\Users\18257\Desktop\深日记 --local --json
 
 模拟场景改动：
 
-  python C:\Users\18257\Desktop\深城日常\tools\select_tests.py --root C:\Users\18257\Desktop\深城日常 --files scenes/main.tscn --json
+  python C:\Users\18257\Desktop\深日记\tools\select_tests.py --root C:\Users\18257\Desktop\深日记 --files scenes/main.tscn --json
 
 模拟工资改动：
 
-  python C:\Users\18257\Desktop\深城日常\tools\select_tests.py --root C:\Users\18257\Desktop\深城日常 --files data/wage.csv --json
+  python C:\Users\18257\Desktop\深日记\tools\select_tests.py --root C:\Users\18257\Desktop\深日记 --files data/wage.csv --json
 
 release 计划：
 
-  python C:\Users\18257\Desktop\深城日常\tools\select_tests.py --root C:\Users\18257\Desktop\深城日常 --mode release --files docs/README.md --json
+  python C:\Users\18257\Desktop\深日记\tools\select_tests.py --root C:\Users\18257\Desktop\深日记 --mode release --files docs/README.md --json
 
 ## 编译检查
 
@@ -140,12 +140,12 @@ playtest 不使用 headless，附加真实窗口参数：
 
 纯逻辑自测不启动 Godot：
 
-  python C:\Users\18257\Desktop\深城日常\tools\test_selector_test.py
+  python C:\Users\18257\Desktop\深日记\tools\test_selector_test.py
 
 静态语法检查：
 
-  python -m py_compile C:\Users\18257\Desktop\深城日常\tools\select_tests.py C:\Users\18257\Desktop\深城日常\tools\test_selector_test.py
-  python -m json.tool C:\Users\18257\Desktop\深城日常\tools\test_map.json
+  python -m py_compile C:\Users\18257\Desktop\深日记\tools\select_tests.py C:\Users\18257\Desktop\深日记\tools\test_selector_test.py
+  python -m json.tool C:\Users\18257\Desktop\深日记\tools\test_map.json
 
 ## 失败传播
 

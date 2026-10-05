@@ -1,11 +1,11 @@
-; 《深城日常》 Godot 工程配置
+; 《深日记》 Godot 工程配置
 ; 引擎基线：Godot 4.2+，当前便携开发版 4.7.2 stable
 
 config_version=5
 
 [application]
 
-config/name="深城日常"
+config/name="深日记"
 config/description="深圳湾人才公园独立试玩版；旧版2D由单独启动器进入。"
 config/version="0.5.0"
 run/main_scene="res://scenes/main.tscn"

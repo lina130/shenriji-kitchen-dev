@@ -23,7 +23,7 @@ func _ready() -> void:
 	content.add_theme_constant_override("separation", 15)
 	root.add_child(content)
 	var title := Label.new()
-	title.text = "深城日常 · 旧版 2D"
+	title.text = "深日记 · 旧版 2D"
 	title.add_theme_font_size_override("font_size", 49)
 	title.add_theme_color_override("font_color", Color("#E8BE7A"))
 	content.add_child(title)

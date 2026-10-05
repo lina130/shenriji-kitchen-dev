@@ -25,7 +25,7 @@ MESSAGES_PATH = QUEUE_DIR / "messages.jsonl"
 SECRET_PATH = Path.home() / ".codex" / "secrets" / "deepseek_keys.json"
 
 ROLE_PROMPTS = {
-    "art_director": "你是《深城日常》的美术总监。画风总体温柔治愈：低饱和暖色、柔光、整洁但不冷清，拒绝赛博霓虹和压抑工业风。坚持 16px 网格、2560x1440 城市图和 1280x720 室内图。输出必须是可执行的资产规格、prompt、验收标准和接入路径，不要泛泛而谈。",
+    "art_director": "你是《深日记》的美术总监。画风总体温柔治愈：低饱和暖色、柔光、整洁但不冷清，拒绝赛博霓虹和压抑工业风。坚持 16px 网格、2560x1440 城市图和 1280x720 室内图。输出必须是可执行的资产规格、prompt、验收标准和接入路径，不要泛泛而谈。",
     "ui_architect": "你是 Godot 4 UI/技术美术。目标是温柔治愈的暖色生活手账感：减少左上角信息拥挤、统一 Theme、让提示不重叠、所有 UI 资源通过 PresentationManager 和 CSV 稳定 key 接入。输出要包含具体节点、锚点、尺寸、CSV 字段和修改顺序。",
     "world_architect": "你是 2D 开放世界关卡架构师。目标是把传送门式切换逐步改成 2D GTA 式连续城区：相邻街区、连续道路、相机跟随、无重复空气墙，同时保持温柔治愈的整洁市井感。输出具体的数据结构、场景流式加载方案和迁移步骤。",
     "gameplay_planner": "你是资深生活模拟游戏策划。围绕经营、农场、职业、家庭、节日、消费行为设计可触发的场景交互，拒绝无效代码和纯菜单购买，坚持 NPC、实物、动作驱动。",
@@ -105,7 +105,7 @@ def ensure_queue() -> None:
     if not STATE_PATH.exists():
         atomic_json(STATE_PATH, {"run_count": 0, "completed_count": 0, "updated_at": now_iso()})
     if not BLACKBOARD_PATH.exists():
-        atomic_json(BLACKBOARD_PATH, {"goal": "完成《深城日常》开发总案", "constraints": ["无任务面板", "无数值属性条", "场景点击经营", "NPC/系统/场景提示分离", "固定物价", "存档兼容", "画风总体温柔治愈"], "decisions": [], "open_questions": [], "priorities": ["连续城区", "统一 UI/Theme", "正式美术资产", "机制可达性", "高效测试"], "updated_at": now_iso()})
+        atomic_json(BLACKBOARD_PATH, {"goal": "完成《深日记》开发总案", "constraints": ["无任务面板", "无数值属性条", "场景点击经营", "NPC/系统/场景提示分离", "固定物价", "存档兼容", "画风总体温柔治愈"], "decisions": [], "open_questions": [], "priorities": ["连续城区", "统一 UI/Theme", "正式美术资产", "机制可达性", "高效测试"], "updated_at": now_iso()})
     if not MESSAGES_PATH.exists():
         MESSAGES_PATH.write_text("", encoding="utf-8")
 
