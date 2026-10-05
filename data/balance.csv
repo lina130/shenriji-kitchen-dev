@@ -3,8 +3,8 @@ starting_money,320,yuan,初始现金
 rent_amount,800,yuan,每期房租
 rent_interval_days,30,day,房租周期
 factory_wage,180,yuan,单次工厂班次工资
-factory_shift_minutes,480,minute,单次班次游戏时长
-factory_energy_cost,32,energy,单次班次基础体力消耗
+factory_shift_minutes,180,minute,单次班次游戏时长
+factory_energy_cost,12,energy,单次班次基础体力消耗
 clerk_wage,95,yuan,便利店兼职工资
 clerk_shift_minutes,300,minute,便利店兼职时长
 clerk_energy_cost,20,energy,便利店兼职基础体力消耗
@@ -13,8 +13,12 @@ study_energy_cost,10,energy,单次学习基础体力消耗
 exercise_minutes,90,minute,单次锻炼时长
 exercise_energy_cost,18,energy,单次锻炼基础体力消耗
 collection_energy_cost,2,energy,单次摸金基础体力消耗
-daily_collection_points,3,point,全城每日基础彩蛋刷新点
+daily_collection_points,6,point,全城每日基础彩蛋刷新点
 stall_upgrade_1_cost,900,yuan,固定摊位投入
 stall_upgrade_2_cost,2400,yuan,小铺面投入
 consignment_base_slots,2,slot,寄卖基础容量
 consignment_slots_per_tier,2,slot,每级摊位增加的寄卖容量
+real_seconds_per_game_minute,2.0,second,现实一秒约推进半个游戏分钟
+auto_save_interval_minutes,15,minute,自动存档间隔（游戏分钟）
+market_transition_save,true,bool,换市是否自动存档
+staff_wage_pressure,1.0,multiplier,工资与期望工资的容忍系数

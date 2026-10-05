@@ -1,0 +1,7 @@
+course_id,name,cost,study_minutes,energy_cost,credential_id,career_line,description
+office_excel,办公软件与表格,180,240,16,excel_cert,office,报表、排班和库存表都要用到。
+sales_talk,销售沟通,220,240,18,sales_cert,office,练习怎么把话说清楚又不让人反感。
+programming,基础编程,420,360,24,code_cert,office,技术岗位的基础门槛。
+public_exam,公考基础,360,360,22,public_cert,public,行测、常识和申论从基础开始。
+photography,摄影与修图,260,300,18,photo_cert,freelance,把兴趣变成接单能力。
+design,平面设计基础,320,300,20,design_cert,freelance,海报、菜单和店铺视觉都用得上。

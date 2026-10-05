@@ -1,0 +1,6 @@
+level_id,name,condition_type,condition_value,description
+0,城中村起步,always,0,出租屋、主街、商业区和基础工厂区域开放。
+1,工业与城郊,career_or_day,2,第一份工作稳定后，公交向城郊开放。
+2,河岸生活,story_chapter,2,开始经营后，河边自然区域开放。
+3,城市周边,business_level,1,自己的店面跑起来后，长途旅行线路开放。
+4,远行见闻,day,14,生活稳定一段时间后，山林温泉开放。

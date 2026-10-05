@@ -20,6 +20,7 @@ var reputation := 0
 var last_shift_earned := 0
 var temporary_labor_bonus := 0
 var temporary_brain_bonus := 0
+var last_passive_income := 0
 
 func _ready() -> void:
 	labor_capacity = int(ConfigDB.get_number("business", "labor_base_capacity", 12))
@@ -32,9 +33,12 @@ func begin_new_day(_day_number: int) -> void:
 	labor_stock = mini(get_labor_capacity(), labor_stock + int(ConfigDB.get_number("business", "labor_daily_restore", 6)))
 	brain_stock = mini(get_brain_capacity(), brain_stock + int(ConfigDB.get_number("business", "brain_daily_restore", 5)))
 	_update_daily_prices()
+	_settle_passive_business()
 	changed.emit()
 
 func buy_goods(goods_id: String, quantity: int = 1) -> bool:
+	if CoopManager.is_client_view_only():
+		return CoopManager.request_shared_action("buy_goods", {"goods_id": goods_id, "quantity": quantity})
 	if quantity <= 0 or ConfigDB.get_row("goods", goods_id).is_empty():
 		return false
 	var unit_price := get_buy_price(goods_id)
@@ -47,10 +51,23 @@ func buy_goods(goods_id: String, quantity: int = 1) -> bool:
 	average_cost[goods_id] = (old_cost * old_count + unit_price * quantity) / float(new_count)
 	goods_stock[goods_id] = new_count
 	total_cost += total_price
+	SaveManager.request_auto_save("buy_goods")
 	changed.emit()
 	return true
 
+func add_farm_goods(goods_id: String, quantity: int) -> void:
+	if quantity <= 0 or ConfigDB.get_row("goods", goods_id).is_empty():
+		return
+	var old_count := int(goods_stock.get(goods_id, 0))
+	var old_cost := float(average_cost.get(goods_id, 0.0))
+	var new_count := old_count + quantity
+	average_cost[goods_id] = (old_cost * old_count) / float(new_count)
+	goods_stock[goods_id] = new_count
+	changed.emit()
+
 func sell_goods(goods_id: String, quantity: int = 1) -> bool:
+	if CoopManager.is_client_view_only():
+		return CoopManager.request_shared_action("sell_goods", {"goods_id": goods_id, "quantity": quantity})
 	if quantity <= 0 or int(goods_stock.get(goods_id, 0)) < quantity:
 		NoticeManager.show_message("库存不够，先去批发市场补货吧。", "warning")
 		return false
@@ -66,11 +83,14 @@ func sell_goods(goods_id: String, quantity: int = 1) -> bool:
 	trade_profit += proceeds - int(round(cost_basis))
 	total_revenue += proceeds
 	GameState.earn(proceeds, "出手 %d 份%s，收到 ¥%d。" % [quantity, ConfigDB.get_row("goods", goods_id).get("name", goods_id), proceeds])
+	SaveManager.request_auto_save("sell_goods")
 	TreasureManager.try_trigger("sell_goods")
 	changed.emit()
 	return true
 
 func restock_labor() -> bool:
+	if CoopManager.is_client_view_only():
+		return CoopManager.request_shared_action("restock_labor")
 	if temporary_labor_bonus >= 6:
 		NoticeManager.show_message("临时帮手已经够多了，再多也安排不开。", "hint")
 		return false
@@ -82,10 +102,13 @@ func restock_labor() -> bool:
 	labor_stock += amount
 	total_cost += cost
 	NoticeManager.show_message("临时帮手到了，今天的劳力上限增加。", "positive")
+	SaveManager.request_auto_save("restock_labor")
 	changed.emit()
 	return true
 
 func restock_brain() -> bool:
+	if CoopManager.is_client_view_only():
+		return CoopManager.request_shared_action("restock_brain")
 	if temporary_brain_bonus >= 6:
 		NoticeManager.show_message("今天已经缓过来了，再喝只会睡不着。", "hint")
 		return false
@@ -97,6 +120,7 @@ func restock_brain() -> bool:
 	brain_stock += amount
 	total_cost += cost
 	NoticeManager.show_message("坐下来喘口气，脑力库存增加。", "positive")
+	SaveManager.request_auto_save("restock_brain")
 	changed.emit()
 	return true
 
@@ -113,13 +137,40 @@ func get_buy_price(goods_id: String) -> int:
 func get_sell_price(goods_id: String) -> int:
 	var base := float(ConfigDB.get_row("goods", goods_id).get("base_cost", "1"))
 	var modifier := float(price_modifiers.get(goods_id, 0.0))
-	return maxi(1, int(round(base * (1.10 + modifier * 1.15))))
+	var weather_bonus := get_farm_weather_price_multiplier(goods_id)
+	return maxi(1, int(round(base * (1.10 + modifier * 1.15 + weather_bonus))))
+
+func get_farm_weather_price_multiplier(goods_id: String) -> float:
+	match WeatherSystem.current_weather_id:
+		"rain":
+			return 0.22 if goods_id in ["rice", "greens", "tomato", "tea"] else 0.0
+		"heat":
+			return 0.20 if goods_id in ["lemon", "corn", "tomato", "ice"] else 0.0
+		"humid":
+			return -0.10 if goods_id in ["greens", "flour"] else 0.05
+		"overcast":
+			return 0.04 if goods_id in ["tea", "red_bean"] else 0.0
+		_:
+			return 0.06 if goods_id in ["flour", "rice"] else 0.0
+	return 0.0
 
 func get_price_note(goods_id: String) -> String:
 	return str(price_notes.get(goods_id, "价格平稳"))
 
 func get_stock(goods_id: String) -> int:
 	return int(goods_stock.get(goods_id, 0))
+
+func consume_goods(goods_id: String, quantity: int = 1) -> bool:
+	if quantity <= 0 or get_stock(goods_id) < quantity:
+		return false
+	var remaining := get_stock(goods_id) - quantity
+	if remaining <= 0:
+		goods_stock.erase(goods_id)
+		average_cost.erase(goods_id)
+	else:
+		goods_stock[goods_id] = remaining
+	changed.emit()
+	return true
 
 func get_goods_lines() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
@@ -163,9 +214,8 @@ func get_recipe_ids() -> Array[String]:
 	return result
 
 func get_unlocked_recipe_ids() -> Array[String]:
-	var all_ids := get_recipe_ids()
-	var count := mini(all_ids.size(), 3 + business_level)
-	return all_ids.slice(0, count)
+	## 时段已经负责菜单池，这里不再用一个固定条数截断菜谱。
+	return get_recipe_ids()
 
 func can_prepare_recipe(recipe_id: String) -> bool:
 	var recipe := ConfigDB.get_row("recipes", recipe_id)
@@ -199,12 +249,19 @@ func register_recipe_sale(recipe_id: String, combo: int) -> int:
 	var recipe := ConfigDB.get_row("recipes", recipe_id)
 	if recipe.is_empty():
 		return 0
-	var base_revenue := int(recipe.get("sale_price", 0))
+	var recipe_sale_price := float(recipe.get("sale_price", 0))
+	var order_base_income := float(ConfigDB.get_number("business", "order_base_income", 6))
+	var equipment_level_total := _get_total_equipment_levels()
+	var equipment_income_per_level := float(ConfigDB.get_number("business", "order_income_per_equipment_level", 2))
+	var base_order_income := recipe_sale_price + order_base_income + float(equipment_level_total) * equipment_income_per_level
 	var combo_multiplier := 1.0 + maxf(0.0, float(combo - 1)) * 0.06
 	var level_multiplier := 1.0 + float(business_level) * 0.05
 	var weather_multiplier := 1.0 + maxf(0.0, WeatherSystem.get_store_sales_bonus() - 1.0) * 0.25
 	var festival_multiplier := 1.0 + CalendarManager.get_business_bonus()
-	var revenue := int(round(base_revenue * combo_multiplier * level_multiplier * weather_multiplier * festival_multiplier))
+	var phase_multiplier := MarketPhaseManager.get_price_multiplier()
+	var wardrobe_tip := 1.0 + WardrobeManager.get_bonus("social")
+	var festival_special := 1.0 + MarketPhaseManager.get_festival_bonus(recipe_id)
+	var revenue := int(round(base_order_income * combo_multiplier * level_multiplier * weather_multiplier * festival_multiplier * phase_multiplier * wardrobe_tip * festival_special))
 	total_revenue += revenue
 	customers_served += 1
 	reputation = mini(999, reputation + 1)
@@ -212,6 +269,16 @@ func register_recipe_sale(recipe_id: String, combo: int) -> int:
 	GameState.earn(revenue)
 	changed.emit()
 	return revenue
+
+func _get_total_equipment_levels() -> int:
+	var kitchen := get_node_or_null("/root/KitchenManager")
+	if kitchen == null:
+		return 0
+	var levels: Dictionary = kitchen.get("equipment_levels")
+	var total := 0
+	for level in levels.values():
+		total += int(level)
+	return total
 
 func register_failed_order() -> void:
 	reputation = maxi(0, reputation - 1)
@@ -234,6 +301,8 @@ func get_upgrade_cost() -> int:
 	return 0
 
 func upgrade_business() -> bool:
+	if CoopManager.is_client_view_only():
+		return CoopManager.request_shared_action("upgrade_business")
 	if business_level >= 3:
 		NoticeManager.show_message("现在的铺面已经做到这条街的上限了。", "hint")
 		return false
@@ -243,9 +312,12 @@ func upgrade_business() -> bool:
 	if not GameState.spend(get_upgrade_cost()):
 		return false
 	business_level += 1
+	if business_level == 1:
+		StoryManager.record_action("business_owned")
 	labor_capacity = get_labor_capacity()
 	brain_capacity = get_brain_capacity()
 	NoticeManager.show_message("店面扩成了%s，菜单和人手都能再往上走。" % get_business_level_name(), "positive")
+	SaveManager.request_auto_save("business_upgrade")
 	changed.emit()
 	return true
 
@@ -256,6 +328,8 @@ func can_sell_business() -> bool:
 	return business_level >= int(ConfigDB.get_number("business", "business_sale_min_level", 2))
 
 func sell_business() -> bool:
+	if CoopManager.is_client_view_only():
+		return CoopManager.request_shared_action("sell_business")
 	if not can_sell_business():
 		NoticeManager.show_message("这个摊子还太小，暂时没人愿意接盘。", "warning")
 		return false
@@ -273,6 +347,7 @@ func sell_business() -> bool:
 	_set_starter_stock()
 	labor_stock = get_labor_capacity()
 	brain_stock = get_brain_capacity()
+	SaveManager.request_auto_save("business_sold")
 	changed.emit()
 	return true
 
@@ -289,6 +364,15 @@ func get_recipe_lines() -> Array[Dictionary]:
 			"sale_price": int(recipe.get("sale_price", 0)),
 		})
 	return result
+
+func _settle_passive_business() -> void:
+	last_passive_income = 0
+	if business_level <= 0 or StaffManager.hired.is_empty():
+		return
+	var staffing := clampf(0.5 + StaffManager.get_bonus("kitchen_speed") + StaffManager.get_bonus("patience"), 0.5, 2.0)
+	var base := float(business_level) * (5.0 + float(reputation) * 0.06)
+	last_passive_income = maxi(1, int(round(base * staffing * 0.35)))
+	GameState.earn(last_passive_income, "店员自己照看了一会儿生意：¥%d。" % last_passive_income)
 
 func _update_daily_prices() -> void:
 	price_modifiers.clear()
@@ -337,6 +421,7 @@ func get_save_data() -> Dictionary:
 		"reputation": reputation,
 		"temporary_labor_bonus": temporary_labor_bonus,
 		"temporary_brain_bonus": temporary_brain_bonus,
+		"last_passive_income": last_passive_income,
 	}
 
 func restore(data: Dictionary) -> void:
@@ -354,6 +439,7 @@ func restore(data: Dictionary) -> void:
 	reputation = int(data.get("reputation", 0))
 	temporary_labor_bonus = int(data.get("temporary_labor_bonus", 0))
 	temporary_brain_bonus = int(data.get("temporary_brain_bonus", 0))
+	last_passive_income = int(data.get("last_passive_income", 0))
 	labor_capacity = get_labor_capacity()
 	brain_capacity = get_brain_capacity()
 	changed.emit()
@@ -368,6 +454,7 @@ func reset_new_game() -> void:
 	last_shift_earned = 0
 	temporary_labor_bonus = 0
 	temporary_brain_bonus = 0
+	last_passive_income = 0
 	_set_starter_stock()
 	labor_capacity = get_labor_capacity()
 	brain_capacity = get_brain_capacity()

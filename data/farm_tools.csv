@@ -1,0 +1,5 @@
+tool_id,name,base_cost,upgrade_cost_growth,max_level,effect_type,effect_per_level,description
+hoe,锄头,120,1.8,3,harvest_bonus,0.08,锄头越顺手，收成时越容易多出一份。
+watering_can,洒水壶,160,1.7,3,water_radius,1,升级后一次能多浇一块相邻地。
+fertilizer_bin,堆肥桶,180,1.8,3,growth_bonus,0.08,好肥料让作物每天长得更稳。
+sprinkler,自动喷灌,320,1.9,3,auto_water_plots,1,每天自动浇灌前面若干块地，雨天则全场自动浇水。

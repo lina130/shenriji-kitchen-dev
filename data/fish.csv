@@ -1,0 +1,7 @@
+fish_id,name,goods_id,rarity,weight,habitat,start_hour,end_hour,weather,rod_level,bonus_value,description
+river_carp,河鲤,tilapia,common,38,riverside,5,19,any,0,8,水边最常见的一种鱼，做什么都不会太差。
+tilapia,罗非鱼,tilapia,common,30,riverside,8,20,any,0,10,肉厚刺少，餐馆备料方便。
+river_shrimp,河虾,river_shrimp,uncommon,18,riverside,16,23,any,0,13,夜里更容易聚在浅水边。
+pomfret,鲳鱼,pomfret,rare,9,riverside,17,23,clear,1,22,晚市行情好，但要更稳的鱼竿。
+mud_crab,大闸蟹,mud_crab,rare,5,riverside,18,22,cool,1,30,冷天靠岸边，节日前格外值钱。
+moonfish,月光鱼,pomfret,legendary,2,riverside,20,23,clear,2,65,夜里水面一亮，它就从桥影下游过去。

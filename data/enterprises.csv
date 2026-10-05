@@ -1,0 +1,5 @@
+enterprise_id,name,area_id,buy_cost,base_income,income_per_level,upgrade_cost,upgrade_cost_growth,max_level,description,operate_minutes,operate_energy,operate_labor,operate_brain,operate_goods,operate_base
+street_stall,街边地摊,street,800,18,11,900,1.75,3,先从一张折叠桌和一口锅开始。,60,8,1,0,egg:1|greens:1,28
+snack_drink,小吃饮品店,commercial_district,4200,52,28,3600,1.65,3,有固定店面后，客流和翻台会稳定下来。,90,12,2,1,tea:1|lemon:1|ice:1,55
+retail_shop,零售百货店,commercial_district,12000,120,62,8800,1.65,3,从街坊日用到游客伴手礼都能卖。,120,14,2,1,rice:1|noodles:1|flour:1,130
+small_factory,小型加工厂,industrial_district,26000,260,130,16000,1.6,3,承接周边订单，员工和机器都会影响收益。,180,22,4,2,rice:2|flour:2,320

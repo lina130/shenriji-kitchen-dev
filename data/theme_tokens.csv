@@ -1,0 +1,38 @@
+token,value,description
+color.background,#F6EBD8,窗口底色
+color.panel,#F5E9D6,面板底色
+color.accent,#E8A85C,主要强调色
+color.npc,#6F8F7A,NPC 对话文字
+color.system,#8AA9B1,系统消息文字
+color.scene,#C89C5A,场景提示文字
+color.text.primary,#4A3B2E,主文字
+color.text.secondary,#7A6653,次文字
+color.text.muted,#A89684,弱化文字
+color.border.soft,#D9C4A8,柔边框
+color.border.focus,#E8B87A,聚焦边框
+color.bg.panel,#F5E9D6E6,主面板底
+color.bg.panel_soft,#F5E9D6B3,次级面板
+color.bg.overlay,#2B211A66,模态遮罩
+color.accent.warm,#E8A85C,暖橙强调
+color.accent.warm_hover,#F0BC7A,hover
+color.accent.warm_pressed,#D18F45,pressed
+color.accent.warm_disabled,#C9B49A,disabled
+color.accent.calm,#A8C4B8,青绿次强调
+color.state.success,#9BBF8A,成功
+color.state.warning,#E8B87A,警告
+color.state.danger,#D98C7A,危险
+color.state.info,#A8B8C8,信息
+color.shadow.soft,#2B211A33,柔光阴影
+color.glow.warm,#FFD9A866,暖色高亮
+font.body,Microsoft YaHei UI,正文中文字体角色
+font.title,Microsoft YaHei UI,标题中文字体角色
+font.numeric,Consolas,数字和金额字体角色
+size.body,19,正文基准字号
+size.title,30,标题基准字号
+radius.panel,14,面板圆角
+radius.button,10,按钮圆角
+radius.chip,999,标签圆角
+space.xs,4,最小间距
+space.sm,8,小间距
+space.md,16,中间距
+space.lg,24,大间距

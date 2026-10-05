@@ -1,0 +1,7 @@
+station_type,name,upgrade_base_cost,upgrade_step,speed_per_level,capacity_per_two_levels,description
+prep,备料台,260,220,0.18,1,切配、和面、包馅都在这里。
+steamer,蒸笼,320,260,0.18,1,只能加快蒸制品，油锅升级不通用。
+fryer,油锅,300,240,0.18,1,下锅和翻炒都要守着火候。
+soup_pot,汤锅,300,240,0.18,1,熬汤、煮粥、烫粉慢工出细活。
+drink,饮品台,260,220,0.18,1,磨浆、封杯和加冰的专用台面。
+serve,出餐台,240,200,0.18,1,装盘、打包和递给客人的最后一步。

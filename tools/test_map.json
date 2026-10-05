@@ -1,0 +1,348 @@
+{
+  "version": 1,
+  "description": "Diff-driven gate selection for Shenzhen Daily. Business code should not depend on this file.",
+  "always": [
+    "compile"
+  ],
+  "test_order": [
+    "scene-check",
+    "world-systems",
+    "smoke-test",
+    "economy-check",
+    "stress-test",
+    "spot-city",
+    "full-simulation",
+    "playtest"
+  ],
+  "release_tests": [
+    "scene-check",
+    "world-systems",
+    "smoke-test",
+    "economy-check",
+    "stress-test",
+    "spot-city",
+    "full-simulation",
+    "playtest"
+  ],
+  "fallback": [
+    "smoke-test",
+    "world-systems"
+  ],
+  "tests_only_paths": [
+    "tests/**",
+    "docs/**",
+    "**/*.md",
+    "tools/select_tests.py",
+    "tools/test_map.json",
+    "tools/run_selected_tests.ps1",
+    "tools/test_selector_test.py",
+    "docs/TEST_SELECTION.md"
+  ],
+  "ignored_paths": [
+    ".godot/**",
+    ".tools/**",
+    "artifacts/**",
+    "release/**",
+    "Godot/**",
+    "output/**"
+  ],
+  "gates": {
+    "scene-check": {
+      "args": [
+        "--scene-check"
+      ],
+      "timeout_sec": 120,
+      "headless": true,
+      "release_only": false
+    },
+    "world-systems": {
+      "args": [
+        "--world-systems"
+      ],
+      "timeout_sec": 180,
+      "headless": true,
+      "release_only": false
+    },
+    "smoke-test": {
+      "args": [
+        "--smoke-test"
+      ],
+      "timeout_sec": 60,
+      "headless": true,
+      "release_only": false
+    },
+    "economy-check": {
+      "args": [
+        "--economy-check"
+      ],
+      "timeout_sec": 120,
+      "headless": true,
+      "release_only": false
+    },
+    "stress-test": {
+      "args": [
+        "--stress-test"
+      ],
+      "timeout_sec": 300,
+      "headless": true,
+      "release_only": false
+    },
+    "spot-city": {
+      "args": [
+        "--spot-city"
+      ],
+      "timeout_sec": 120,
+      "headless": true,
+      "release_only": false
+    },
+    "full-simulation": {
+      "args": [
+        "--full-simulation"
+      ],
+      "timeout_sec": 600,
+      "headless": true,
+      "release_only": true
+    },
+    "playtest": {
+      "args": [
+        "--playtest"
+      ],
+      "timeout_sec": 600,
+      "headless": false,
+      "release_only": true,
+      "extra_args": [
+        "--resolution",
+        "1280x720"
+      ]
+    }
+  },
+  "rules": [
+    {
+      "id": "scene",
+      "gates": [
+        "scene-check",
+        "spot-city"
+      ],
+      "paths": [
+        "scenes/**",
+        "scripts/gameplay/world.gd",
+        "scripts/gameplay/area_backdrop.gd",
+        "scripts/gameplay/interactable.gd",
+        "autoload/scene_router.gd",
+        "data/scene_metadata.csv",
+        "data/scene_zones.csv",
+        "data/visual_bindings.csv",
+        "assets/art/scenes/**",
+        "assets/art/formal/scenes/**"
+      ]
+    },
+    {
+      "id": "world-systems",
+      "gates": [
+        "world-systems"
+      ],
+      "paths": [
+        "autoload/**",
+        "scripts/gameplay/farm_plot_layer.gd",
+        "scripts/gameplay/room_furniture_layer.gd",
+        "scripts/gameplay/fishing_effect_layer.gd",
+        "data/**/*.csv"
+      ],
+      "exclude": [
+        "data/balance.csv",
+        "data/bank.csv",
+        "data/business.csv",
+        "data/breakfast.csv",
+        "data/breakfast_menu.csv",
+        "data/customer_types.csv",
+        "data/equipment.csv",
+        "data/goods.csv",
+        "data/market_phases.csv",
+        "data/night_market.csv",
+        "data/price*.csv",
+        "data/recipes.csv",
+        "data/scene_metadata.csv",
+        "data/scene_zones.csv",
+        "data/theme_tokens.csv",
+        "data/ui_assets.csv",
+        "data/ui_text_styles.csv",
+        "data/visual_bindings.csv",
+        "data/wage*.csv"
+      ]
+    },
+    {
+      "id": "smoke",
+      "gates": [
+        "smoke-test"
+      ],
+      "paths": [
+        "project.godot",
+        "export_presets.cfg",
+        "scenes/main.tscn",
+        "scripts/main.gd",
+        "tools/generate_*.py",
+        "tools/generate_*.ps1",
+        "assets/art/ui/**",
+        "assets/art/formal/ui/**"
+      ]
+    },
+    {
+      "id": "economy",
+      "gates": [
+        "economy-check"
+      ],
+      "paths": [
+        "scripts/economy/**",
+        "scripts/business/**",
+        "scripts/gameplay/kitchen_effect_layer.gd",
+        "autoload/business_manager.gd",
+        "autoload/kitchen_manager.gd",
+        "autoload/market_phase_manager.gd",
+        "data/balance.csv",
+        "data/business.csv",
+        "data/goods.csv",
+        "data/recipes.csv",
+        "data/breakfast.csv",
+        "data/breakfast_menu.csv",
+        "data/equipment.csv",
+        "data/market_phases.csv",
+        "data/night_market.csv",
+        "data/customer_types.csv",
+        "data/price*.csv",
+        "data/wage*.csv",
+        "tests/economy_check.gd"
+      ]
+    },
+    {
+      "id": "stress",
+      "gates": [
+        "stress-test"
+      ],
+      "paths": [
+        "scripts/economy/**",
+        "autoload/save_manager.gd",
+        "autoload/business_manager.gd",
+        "autoload/kitchen_manager.gd",
+        "autoload/market_phase_manager.gd",
+        "data/balance.csv",
+        "data/business.csv",
+        "data/goods.csv",
+        "data/recipes.csv",
+        "data/breakfast.csv",
+        "data/breakfast_menu.csv",
+        "data/equipment.csv",
+        "data/wage*.csv",
+        "tests/stress_test.gd"
+      ]
+    },
+    {
+      "id": "spot-city",
+      "gates": [
+        "spot-city"
+      ],
+      "paths": [
+        "data/scene_zones.csv",
+        "data/scene_metadata.csv",
+        "data/npcs.csv",
+        "data/npc_schedule.csv",
+        "scripts/gameplay/world.gd",
+        "scripts/gameplay/npc_actor.gd",
+        "scripts/gameplay/interactable.gd",
+        "tests/playtest_runner.gd"
+      ]
+    },
+    {
+      "id": "ui-theme",
+      "gates": [
+        "smoke-test",
+        "scene-check"
+      ],
+      "paths": [
+        "scripts/ui/**",
+        "data/theme_tokens.csv",
+        "data/ui_assets.csv",
+        "data/ui_text_styles.csv",
+        "data/visual_bindings.csv",
+        "assets/art/ui/**",
+        "assets/art/formal/ui/**"
+      ]
+    }
+  ],
+  "force_rules": [
+    {
+      "id": "autoload-critical",
+      "paths": [
+        "autoload/**"
+      ],
+      "gates": [
+        "smoke-test",
+        "world-systems"
+      ]
+    },
+    {
+      "id": "build-config",
+      "paths": [
+        "project.godot",
+        "export_presets.cfg",
+        "scenes/main.tscn"
+      ],
+      "gates": [
+        "smoke-test"
+      ]
+    },
+    {
+      "id": "test-scene",
+      "paths": [
+        "tests/scene_check.gd"
+      ],
+      "gates": [
+        "scene-check"
+      ]
+    },
+    {
+      "id": "test-world",
+      "paths": [
+        "tests/world_systems_test.gd"
+      ],
+      "gates": [
+        "world-systems"
+      ]
+    },
+    {
+      "id": "test-smoke",
+      "paths": [
+        "tests/smoke_test.gd"
+      ],
+      "gates": [
+        "smoke-test"
+      ]
+    },
+    {
+      "id": "test-economy",
+      "paths": [
+        "tests/economy_check.gd"
+      ],
+      "gates": [
+        "economy-check"
+      ]
+    },
+    {
+      "id": "test-stress",
+      "paths": [
+        "tests/stress_test.gd"
+      ],
+      "gates": [
+        "stress-test"
+      ]
+    },
+    {
+      "id": "test-playtest",
+      "paths": [
+        "tests/playtest_runner.gd"
+      ],
+      "gates": [
+        "spot-city"
+      ]
+    }
+  ]
+}

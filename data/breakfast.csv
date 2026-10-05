@@ -1,0 +1,5 @@
+key,value,unit,note
+shift_duration,75,second,早餐档营业时长
+shift_order_target,8,order,早餐档目标订单
+morning_start_hour,6,hour,早餐档开始
+morning_end_hour,11,hour,早餐档结束

@@ -6,8 +6,8 @@ config_version=5
 [application]
 
 config/name="深城日常"
-config/description="无任务、无数值面板的深圳都市生活模拟游戏。"
-config/version="0.4.0"
+config/description="深圳湾人才公园独立试玩版；旧版2D由单独启动器进入。"
+config/version="0.5.0"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.2", "GL Compatibility")
 boot_splash/bg_color=Color(0.055, 0.067, 0.078, 1)
@@ -18,12 +18,16 @@ config/icon="res://icon.svg"
 
 InputSetup="*res://autoload/input_setup.gd"
 ConfigDB="*res://autoload/config_db.gd"
+SceneLayoutManager="*res://autoload/scene_layout_manager.gd"
+ModManager="*res://autoload/mod_manager.gd"
+PresentationManager="*res://autoload/presentation_manager.gd"
 SettingsManager="*res://autoload/settings_manager.gd"
 RandomManager="*res://autoload/random_manager.gd"
 InventoryManager="*res://autoload/inventory_manager.gd"
 NoticeManager="*res://autoload/notice_manager.gd"
 TimeSystem="*res://autoload/time_system.gd"
 CalendarManager="*res://autoload/calendar_manager.gd"
+FestivalManager="*res://autoload/festival_manager.gd"
 TreasureManager="*res://autoload/treasure_manager.gd"
 WeatherSystem="*res://autoload/weather_system.gd"
 CollectionManager="*res://autoload/collection_manager.gd"
@@ -34,6 +38,31 @@ ExpeditionManager="*res://autoload/expedition_manager.gd"
 BusinessManager="*res://autoload/business_manager.gd"
 FinanceManager="*res://autoload/finance_manager.gd"
 KitchenManager="*res://autoload/kitchen_manager.gd"
+MarketPhaseManager="*res://autoload/market_phase_manager.gd"
+NightMarketManager="*res://autoload/night_market_manager.gd"
+FarmManager="*res://autoload/farm_manager.gd"
+PetManager="*res://autoload/pet_manager.gd"
+RoomManager="*res://autoload/room_manager.gd"
+StaffManager="*res://autoload/staff_manager.gd"
+CareerManager="*res://autoload/career_manager.gd"
+WardrobeManager="*res://autoload/wardrobe_manager.gd"
+StoryManager="*res://autoload/story_manager.gd"
+FishingManager="*res://autoload/fishing_manager.gd"
+HousingManager="*res://autoload/housing_manager.gd"
+TravelManager="*res://autoload/travel_manager.gd"
+EnterpriseManager="*res://autoload/enterprise_manager.gd"
+AchievementManager="*res://autoload/achievement_manager.gd"
+PlatformIntegrationManager="*res://autoload/platform_integration_manager.gd"
+CoopManager="*res://autoload/coop_manager.gd"
+FamilyManager="*res://autoload/family_manager.gd"
+WellbeingManager="*res://autoload/wellbeing_manager.gd"
+UnlockManager="*res://autoload/unlock_manager.gd"
+MedicalManager="*res://autoload/medical_manager.gd"
+EducationManager="*res://autoload/education_manager.gd"
+EndingManager="*res://autoload/ending_manager.gd"
+HobbyManager="*res://autoload/hobby_manager.gd"
+NpcStoryManager="*res://autoload/npc_story_manager.gd"
+PhotoManager="*res://autoload/photo_manager.gd"
 GameState="*res://autoload/game_state.gd"
 AudioManager="*res://autoload/audio_manager.gd"
 SceneRouter="*res://autoload/scene_router.gd"
@@ -43,10 +72,17 @@ SaveManager="*res://autoload/save_manager.gd"
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
+window/size/mode=0
+window/size/resizable=true
+window/size/min_width=0
+window/size/min_height=0
 window/stretch/mode="canvas_items"
 window/stretch/aspect="keep"
-window/size/window_width_override=1280
-window/size/window_height_override=720
+window/handheld/orientation=4
+
+[input_devices]
+
+pointing/emulate_mouse_from_touch=true
 
 [rendering]
 

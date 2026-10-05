@@ -32,6 +32,10 @@ const AREA_POINTS := {
 
 var daily_spawns: Dictionary = {}
 var discovered: Dictionary = {}
+var seen_items: Dictionary = {}
+var seen_recipes: Dictionary = {}
+var seen_areas: Dictionary = {}
+var seen_careers: Dictionary = {}
 var total_collected := 0
 var daily_collected := 0
 
@@ -57,6 +61,42 @@ func sell_collectible(item_id: String) -> bool:
 	GameState.earn(price, "%s换成了 ¥%d，钱不多，但日子能松一点。" % [item.get("name", item_id), price])
 	return true
 
+func record_item_seen(item_id: String) -> void:
+	if item_id.is_empty() or seen_items.has(item_id):
+		return
+	seen_items[item_id] = true
+	changed.emit()
+
+func record_recipe_seen(recipe_id: String) -> void:
+	if recipe_id.is_empty() or seen_recipes.has(recipe_id):
+		return
+	seen_recipes[recipe_id] = true
+	changed.emit()
+
+func record_area_visited(area_id: String) -> void:
+	if area_id.is_empty() or seen_areas.has(area_id):
+		return
+	seen_areas[area_id] = true
+	changed.emit()
+
+func record_career_seen(line_id: String) -> void:
+	if line_id.is_empty() or seen_careers.has(line_id):
+		return
+	seen_careers[line_id] = true
+	changed.emit()
+
+func has_seen_item(item_id: String) -> bool:
+	return seen_items.has(item_id) or InventoryManager.get_count(item_id) > 0
+
+func has_seen_recipe(recipe_id: String) -> bool:
+	return seen_recipes.has(recipe_id)
+
+func has_seen_area(area_id: String) -> bool:
+	return seen_areas.has(area_id) or GameState.current_area == area_id
+
+func has_seen_career(line_id: String) -> bool:
+	return seen_careers.has(line_id) or CareerManager.current_line == line_id
+
 func get_log_entries() -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
 	for item_id in discovered:
@@ -74,6 +114,10 @@ func get_rarity_name(rarity: String) -> String:
 func get_save_data() -> Dictionary:
 	return {
 		"discovered": discovered.duplicate(true),
+		"seen_items": seen_items.duplicate(true),
+		"seen_recipes": seen_recipes.duplicate(true),
+		"seen_areas": seen_areas.duplicate(true),
+		"seen_careers": seen_careers.duplicate(true),
 		"total_collected": total_collected,
 		"daily_collected": daily_collected,
 	}
@@ -81,6 +125,10 @@ func get_save_data() -> Dictionary:
 func restore(data: Dictionary) -> void:
 	daily_spawns.clear()
 	discovered = data.get("discovered", {}).duplicate(true)
+	seen_items = data.get("seen_items", {}).duplicate(true)
+	seen_recipes = data.get("seen_recipes", {}).duplicate(true)
+	seen_areas = data.get("seen_areas", {}).duplicate(true)
+	seen_careers = data.get("seen_careers", {}).duplicate(true)
 	total_collected = int(data.get("total_collected", 0))
 	daily_collected = int(data.get("daily_collected", 0))
 	changed.emit()
@@ -88,6 +136,10 @@ func restore(data: Dictionary) -> void:
 func reset_new_game() -> void:
 	daily_spawns.clear()
 	discovered.clear()
+	seen_items.clear()
+	seen_recipes.clear()
+	seen_areas.clear()
+	seen_careers.clear()
 	total_collected = 0
 	daily_collected = 0
 	changed.emit()

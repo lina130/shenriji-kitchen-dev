@@ -1,0 +1,7 @@
+customer_id,name,patience_multiplier,tip_rate,phase_bonus,weight,preferred_recipe_ids,line,leave_line
+office_worker,赶早班的上班族,0.82,0.08,morning:2.0,1.0,soy_milk|tea_egg|pork_bun,麻烦快一点，我赶着打卡。,快迟到了，改天再来。
+student,附近学生,1.12,0.03,lunch:1.8,1.0,canteen_combo|egg_rice|lemon_tea,放学顺路，慢慢做也可以。,要赶公交，先走了。
+elder,巷口熟客,1.32,0.05,any:0.6,1.1,pork_bun|rice_noodle_soup|porridge,还是老样子，做热一点。,不着急，先去别处转转。
+courier,外卖骑手,0.88,0.04,lunch:2.0|dinner:1.8,0.9,soy_milk|egg_rice|rice_noodle_soup,我取了餐就得走。,超时了，这单要退了。
+night_worker,夜班工人,1.05,0.10,dinner:2.2,1.0,beef_noodles|fried_noodles|roast_skewer,忙完才吃上，份量足点。,太晚了，明天再来。
+tourist,外地游客,1.18,0.12,any:0.8,0.8,steamed_tilapia|shrimp_noodles|lemon_tea,第一次来，想尝你们的招牌。,还想再逛逛，下次来吃。

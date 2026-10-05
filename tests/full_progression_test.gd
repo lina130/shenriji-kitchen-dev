@@ -1,12 +1,14 @@
 extends Node
 
 const TARGET_ASSETS := 50000
-const MAX_DAYS := 365
+const MAX_DAYS := 500
 var failures: Array[String] = []
 
 func _ready() -> void:
 	await get_tree().process_frame
+	StoryManager.set_random_events_enabled(false)
 	GameState.reset_new_game()
+	CareerManager.apply_for_job("factory")
 	var business_once := false
 	for day_index in range(MAX_DAYS):
 		_run_day(day_index)
@@ -43,8 +45,11 @@ func _ready() -> void:
 
 func _run_day(day_index: int) -> void:
 	GameState.energy = GameState.max_energy
-	TimeSystem.minute_of_day = 7 * 60
+	TimeSystem.current_day = day_index + 1
+	TimeSystem.minute_of_day = 8 * 60
+	MarketPhaseManager.force_refresh()
 	GameState.work_factory_shift()
+	MarketPhaseManager.force_refresh()
 	_ensure_kitchen_stock()
 	BusinessManager.labor_stock = BusinessManager.get_labor_capacity()
 	BusinessManager.brain_stock = BusinessManager.get_brain_capacity()
@@ -78,17 +83,43 @@ func _run_kitchen_shift() -> void:
 		var recipe_id := str(KitchenManager.orders[0].get("recipe_id", ""))
 		if not BusinessManager.can_prepare_recipe(recipe_id):
 			_ensure_kitchen_stock()
-		if not KitchenManager.place_recipe(recipe_id, 0):
-			break
-		var station: Dictionary = KitchenManager.stations[0]
-		station["progress"] = station["duration"]
-		KitchenManager._update_stations(0.0)
-		KitchenManager.advance_station(0)
-		station["progress"] = station["duration"]
-		KitchenManager._update_stations(0.0)
-		KitchenManager.advance_station(0)
-		KitchenManager.advance_station(0)
+		_complete_pipeline_recipe(recipe_id)
 	KitchenManager.end_shift()
+
+func _complete_pipeline_recipe(recipe_id: String) -> void:
+	var station_type := KitchenManager.get_first_station_type(recipe_id)
+	var station_index := _find_idle_station(station_type)
+	if station_index < 0 or not KitchenManager.place_recipe(recipe_id, station_index):
+		KitchenManager.end_shift()
+		return
+	var safety := 0
+	while KitchenManager.active and safety < 12:
+		safety += 1
+		var station: Dictionary = KitchenManager.stations[station_index]
+		station["progress"] = station["duration"]
+		KitchenManager._update_stations(0.0)
+		var served_before := KitchenManager.served
+		if not KitchenManager.handle_station_action(station_index):
+			break
+		if KitchenManager.served > served_before:
+			return
+		var trays := KitchenManager.get_staging_status()
+		if trays.is_empty():
+			break
+		station_type = str(trays[0].get("station_type", ""))
+		station_index = _find_idle_station(station_type)
+		if station_index < 0 or not KitchenManager.load_staging(0, station_index):
+			break
+		var hand_state := KitchenManager.get_hand_status()
+		if not bool(hand_state.get("empty", true)):
+			if not KitchenManager.handle_station_action(station_index):
+				break
+
+func _find_idle_station(station_type: String) -> int:
+	for station in KitchenManager.get_stations_status():
+		if str(station.get("type", "")) == station_type and str(station.get("state", "")) == "idle":
+			return int(station["index"])
+	return -1
 
 func _run_trade_cycle(day_index: int) -> void:
 	if day_index % 2 == 0:
@@ -103,7 +134,8 @@ func _collect_all_daily_items() -> void:
 	for item_id in ConfigDB.get_rows("collectibles"):
 		if bool(CollectionManager.discovered.get(item_id, false)):
 			continue
-		TreasureManager.force_find("street")
+		if TreasureManager.is_collectible_available(str(item_id)):
+			TreasureManager.force_find_collectible(str(item_id), "street")
 
 func _run_bank_cycle(day_index: int) -> void:
 	if day_index % 5 == 0 and GameState.money > 3000:

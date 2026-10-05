@@ -8,6 +8,8 @@ var _facing := Vector2.DOWN
 var _walk_phase := 0.0
 var _input_locked := false
 var _walk_distance_accumulator := 0.0
+var _world_frames: Array[Texture2D] = []
+var camera: Camera2D
 
 func _ready() -> void:
 	collision_layer = 1
@@ -20,7 +22,31 @@ func _ready() -> void:
 	collision.shape = shape
 	collision.position = Vector2(0, 8)
 	add_child(collision)
+	camera = Camera2D.new()
+	camera.enabled = true
+	camera.position_smoothing_enabled = true
+	camera.position_smoothing_speed = 8.0
+	camera.ignore_rotation = true
+	add_child(camera)
+	camera.make_current()
+	_world_frames = PresentationManager.get_npc_world_frames("player")
 	queue_redraw()
+
+func set_camera_limits(world_size: Vector2) -> void:
+	if not is_instance_valid(camera):
+		return
+	camera.limit_left = 0
+	camera.limit_top = 0
+	camera.limit_right = int(world_size.x)
+	camera.limit_bottom = int(world_size.y)
+	camera.reset_smoothing()
+
+func set_camera_zoom(value: float) -> void:
+	if is_instance_valid(camera):
+		camera.zoom = Vector2.ONE * clampf(value, 0.7, 1.6)
+
+func get_camera() -> Camera2D:
+	return camera
 
 func set_input_locked(value: bool) -> void:
 	_input_locked = value
@@ -41,6 +67,9 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	_check_treasure_walk(delta)
 	queue_redraw()
+
+func get_facing() -> Vector2:
+	return _facing.normalized() if _facing.length_squared() > 0.0 else Vector2.DOWN
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _input_locked:
@@ -84,18 +113,38 @@ func _refresh_context() -> void:
 		hud.set_context_prompt("右键 · %s" % nearby_interactables[0].prompt_text)
 
 func _draw() -> void:
+	if not _world_frames.is_empty():
+		var frame_index := int(floor(_walk_phase / (PI * 0.5))) % _world_frames.size()
+		draw_texture_rect(_world_frames[frame_index], Rect2(-16, -42, 32, 48), false)
+		draw_rect(Rect2(-8, -9, 16, 9), Color(WardrobeManager.get_color("top", Color("#e9b45d")), 0.38), true)
+		_draw_held_item(0.0)
+		return
 	var bob := sin(_walk_phase) * 1.8
 	var shadow := Color(0.02, 0.04, 0.05, 0.42)
 	_draw_shadow_ellipse(Vector2(0, 24), Vector2(18, 8), shadow)
 	var body_rect := Rect2(Vector2(-11, -22 + bob), Vector2(22, 35))
-	draw_rect(body_rect, Color("#e9b45d"), true)
-	draw_rect(Rect2(Vector2(-12, -24 + bob), Vector2(24, 10)), Color("#213238"), true)
+	draw_rect(body_rect, WardrobeManager.get_color("top", Color("#e9b45d")), true)
+	draw_rect(Rect2(Vector2(-12, -24 + bob), Vector2(24, 10)), WardrobeManager.get_color("hat", Color("#213238")), true)
 	draw_rect(Rect2(Vector2(-12, -22 + bob), Vector2(24, 4)), Color("#f5d898"), true)
 	var face_x := _facing.x * 4.0
 	draw_circle(Vector2(-5 + face_x, -9 + bob), 2.2, Color("#17242b"))
 	draw_circle(Vector2(5 + face_x, -9 + bob), 2.2, Color("#17242b"))
-	draw_line(Vector2(-8, 12 + bob), Vector2(-13, 25 + bob), Color("#37505c"), 5.0)
-	draw_line(Vector2(8, 12 + bob), Vector2(13, 25 + bob), Color("#37505c"), 5.0)
+	var shoe_color := WardrobeManager.get_color("shoes", Color("#37505c"))
+	draw_line(Vector2(-8, 12 + bob), Vector2(-13, 25 + bob), shoe_color, 5.0)
+	draw_line(Vector2(8, 12 + bob), Vector2(13, 25 + bob), shoe_color, 5.0)
+	_draw_held_item(bob)
+
+func _draw_held_item(bob: float) -> void:
+	var line := InventoryManager.get_selected_hotbar_line()
+	var item_id := str(line.get("id", ""))
+	if item_id.is_empty():
+		return
+	var texture := PresentationManager.get_item_icon_texture(item_id)
+	if texture != null:
+		draw_texture_rect(texture, Rect2(10, -7 + bob, 20, 20), false)
+	else:
+		draw_rect(Rect2(10, -3 + bob, 18, 18), Color("#d9b562"), true)
+		draw_rect(Rect2(13, -6 + bob, 12, 5), Color("#fff0ba"), true)
 
 func _draw_shadow_ellipse(center: Vector2, radius: Vector2, color: Color) -> void:
 	var points := PackedVector2Array()

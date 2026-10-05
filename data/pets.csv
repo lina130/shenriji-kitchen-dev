@@ -1,0 +1,7 @@
+pet_id,name,species,price,description,bonus_type,bonus_value,care_difficulty
+cat_huang,橘猫阿黄,cat,260,街口捡来的橘猫，白天爱睡，夜里很精神。,patience,0.25,normal
+dog_xiaohei,黑背小黑,dog,320,认路又护主，出门时总爱跟在脚边。,treasure,0.35,normal
+rabbit_mochi,垂耳兔团子,rabbit,200,安静又黏人，爱吃青菜叶子。,harvest,0.25,easy
+parrot_duo,话痨鹦鹉多多,parrot,450,学人说话很快，客人一来就热闹。,sales,0.15,hard
+hamster_nuo,仓鼠糯米,hamster,120,小小的一个，白天躲在木屑里睡觉。,sell,0.2,easy
+turtle_stone,石龟慢慢,turtle,180,慢吞吞的，据说能镇宅。,luck,0.08,easy

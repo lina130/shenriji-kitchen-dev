@@ -1,0 +1,7 @@
+item_id,name,price,max_stock,refill_seconds,equipment,description
+bun,鲜肉包,10,3,1.5,steamer,蒸笼里一笼一笼地冒热气。
+soymilk,现磨豆浆,6,3,1.1,drink,一大桶豆浆，倒一杯就行。
+youtiao,现炸油条,8,3,1.7,fryer,下锅一会儿就金黄。
+porridge,皮蛋瘦肉粥,14,2,2.3,steamer,熬得稠稠的，最考验耐心。
+tea_egg,茶叶蛋,5,4,0.9,steamer,泡得越久越入味。
+rice_noodle,汤河粉,15,2,2.6,steamer,现烫一碗，热气腾腾。

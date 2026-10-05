@@ -1,0 +1,4 @@
+phase_id,name,start_minute,end_minute,locations,patience_multiplier,transition_minutes,price_multiplier,demand_multiplier,description,rush_start_minute,rush_end_minute,rush_name,rush_spawn_multiplier,rush_patience_multiplier,rush_tip_bonus
+morning,早市,360,630,breakfast_shop,1.0,20,0.92,1.25,六点到十点半，早餐讲究快、热、不断档。,420,510,上班族早高峰,1.55,0.82,0.05
+lunch,午市,630,900,restaurant,0.95,15,1.0,1.10,十点半到下午三点，翻台快、套餐多。,720,780,午间翻台潮,1.45,0.88,0.04
+dinner,晚市,1020,1380,restaurant,0.8,25,1.18,0.85,五点到晚上十一点，工序多、客单价高、耐心低。,1170,1260,夜市第一波,1.35,0.90,0.06

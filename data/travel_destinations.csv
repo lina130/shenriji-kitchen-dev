@@ -1,0 +1,4 @@
+destination_id,name,scene_id,travel_cost,travel_minutes,energy_cost,min_day,description
+seaside_resort,海边度假区,seaside_resort,880,360,28,1,坐长途车去看海，适合周末和节日放空。
+ancient_village,古镇老街,ancient_village,1200,420,30,7,石板路、小桥和旧铺面，能淘到城市里没有的东西。
+mountain_spring,山林温泉,mountain_spring,1800,480,35,14,泡温泉、看山雾，恢复状态也解锁稀有见闻。

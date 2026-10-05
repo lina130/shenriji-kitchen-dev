@@ -1,0 +1,4 @@
+animal_id,name,cost,product_goods_id,product_name,product_amount,days_per_product,feed_cost,weather_note
+chicken_house,鸡舍,180,egg,鸡蛋,2,1,1,雨天和回南天产蛋更稳。
+cow_shed,奶牛棚,520,milk,牛奶,2,1,2,酷暑时要先喂水喂料。
+pig_pen,猪圈,680,pork,猪肉,2,3,3,喂得勤才长得快。

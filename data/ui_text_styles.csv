@@ -1,0 +1,13 @@
+style_id,font_role,font_size,color_token,outline_color_token,outline_size,line_spacing
+title.large,font.title,56,color.text.primary,,0,8
+title.medium,font.title,30,color.text.primary,,0,6
+body.default,font.body,18,color.text.primary,,0,4
+body.secondary,font.body,17,color.text.secondary,,0,4
+body.muted,font.body,15,color.text.muted,,0,4
+number.money,font.numeric,22,color.accent.warm,,0,2
+number.clock,font.numeric,18,color.text.primary,,0,2
+chip.weather,font.body,16,color.text.secondary,,0,2
+notice.speaker,font.body,18,color.accent.warm,,0,2
+notice.body,font.body,18,color.text.primary,,0,4
+button.label,font.body,20,color.text.primary,,0,2
+button.label.disabled,font.body,20,color.text.muted,,0,2

@@ -1,0 +1,8 @@
+stall_id,name,stall_type,goods_id,item_id,price,amount,effect_type,effect_value,condition,description
+bbq_skewer,炭火鸡肉串,goods,chicken,,18,2,,,always,夜市收摊前的鸡肉串，刚好给餐馆补两串原料。
+noodle_broth,深夜汤面,goods,noodles,,12,3,,,always,清汤和面饼都还热，拿回店里能省一笔明天早上的进货款。
+fruit_cup,冰镇水果杯,item,,fruit_cup,12,1,energy,12,always,切好的水果杯，吃完能缓一口气。
+herbal_tea,街边凉茶,item,,herbal_tea,8,1,energy,8,always,街坊说夜里喝一杯，第二天没那么燥。
+river_fish,河鲜小炉,goods,tilapia,,22,1,,,always,河边来的鱼在炉子上烤得刚好，可以直接进仓库。
+lucky_draw,夜市抽签,service,,,5,1,money,18,always,摊主说抽一次图个热闹，运气不一定按签文来。
+festival_snack,节日小食摊,item,,milk_tea,10,1,energy,10,festival,只有节日夜里才摆出来的小摊。

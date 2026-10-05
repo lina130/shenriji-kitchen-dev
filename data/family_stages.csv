@@ -1,0 +1,5 @@
+stage_id,name,affinity_required,housing_tier,cost,energy_bonus,relax_bonus,description
+single,一个人,0,0,0,0.0,0.0,自己的生活也可以完整。
+partner,确定关系,35,1,0,2.0,0.02,关系从熟悉走到了愿意一起过日子。
+married,成家,60,2,2800,6.0,0.08,两个人开始共同安排房租、工作和未来。
+family,有孩子的家,75,3,5000,10.0,0.14,家里多了一个需要照顾的人，也多了一份稳定。

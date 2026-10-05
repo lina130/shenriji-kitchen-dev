@@ -46,7 +46,7 @@ func try_trigger_at(context_id: String, world_position: Vector2, area_id: String
 	var rule: Dictionary = TRIGGER_RULES.get(context_id, {})
 	if rule.is_empty():
 		return ""
-	if _found_today >= 2:
+	if get_remaining_collection_points() <= 0:
 		return ""
 	var now := Time.get_ticks_msec() / 1000.0
 	var cooldown := float(rule.get("cooldown", 60.0))
@@ -63,7 +63,7 @@ func force_find(area_id: String = "street", rarity: String = "") -> String:
 	## 仅有测试与调试会用到：清掉每日上限与冷却，便于重复触发。
 	clear_daily_limit()
 	var rule: Dictionary = TRIGGER_RULES.get("walk", {})
-	return _reveal("walk", Vector2.ZERO, area_id, rule, rarity)
+	return _reveal("walk", Vector2.ZERO, area_id, rule, rarity, "", false)
 
 func clear_daily_limit() -> void:
 	_found_today = 0
@@ -75,6 +75,14 @@ func force_find_once(area_id: String = "street") -> String:
 	var rule: Dictionary = TRIGGER_RULES.get(context_id, {})
 	return _reveal(context_id, Vector2.ZERO, area_id, rule)
 
+func force_find_collectible(item_id: String, area_id: String = "street") -> String:
+	## 仅测试与调试使用：按日期验证限定收集物，并走正常入包与图鉴流程。
+	if not is_collectible_available(item_id):
+		return ""
+	clear_daily_limit()
+	var rule: Dictionary = TRIGGER_RULES.get("walk", {})
+	return _reveal("walk", Vector2.ZERO, area_id, rule, "", item_id, false)
+
 func _activity_multiplier() -> float:
 	var multiplier := 1.0 + CalendarManager.get_collection_bonus()
 	var period := TimeSystem.get_period_name()
@@ -83,9 +91,18 @@ func _activity_multiplier() -> float:
 	multiplier += GameState.get_collection_luck_bonus()
 	return multiplier
 
-func _reveal(context_id: String, _world_position: Vector2, _area_id: String, rule: Dictionary, forced_rarity: String = "") -> String:
+func _reveal(context_id: String, _world_position: Vector2, _area_id: String, rule: Dictionary, forced_rarity: String = "", forced_item_id: String = "", consume_energy: bool = true) -> String:
+	if consume_energy:
+		if get_remaining_collection_points() <= 0:
+			return ""
+	elif get_daily_collection_limit() - _found_today <= 0:
+		return ""
 	var rarity := forced_rarity if not forced_rarity.is_empty() else _roll_rarity(context_id)
-	var item_id := _pick_uncollected_item(rarity)
+	var item_id := forced_item_id
+	if item_id.is_empty() or not is_collectible_available(item_id):
+		item_id = ""
+	if item_id.is_empty():
+		item_id = _pick_uncollected_item(rarity)
 	if item_id.is_empty():
 		item_id = _pick_uncollected_item("")
 	if item_id.is_empty():
@@ -93,6 +110,8 @@ func _reveal(context_id: String, _world_position: Vector2, _area_id: String, rul
 	if item_id.is_empty():
 		item_id = _pick_any_item()
 	if item_id.is_empty():
+		return ""
+	if consume_energy and not _spend_collection_energy():
 		return ""
 	var item := InventoryManager.get_item(item_id)
 	InventoryManager.add_item(item_id, 1)
@@ -105,7 +124,7 @@ func _reveal(context_id: String, _world_position: Vector2, _area_id: String, rul
 	var flavor := str(RandomManager.pick(texts)) if not texts.is_empty() else "你偶然发现一件旧物。"
 	var rarity_name := CollectionManager.get_rarity_name(rarity)
 	var suffix := "！" if rarity == "legendary" else "。"
-	NoticeManager.show_message("%s摸到【%s】（%s）%s" % [flavor, item.get("name", item_id), rarity_name, suffix], "positive")
+	NoticeManager.show_scene_message("%s摸到【%s】（%s）%s" % [flavor, item.get("name", item_id), rarity_name, suffix], "旧物发现", "positive")
 	treasure_found.emit(item_id, rarity, context_id)
 	return item_id
 
@@ -132,31 +151,70 @@ func _roll_rarity(context_id: String) -> String:
 func _pick_uncollected_item(rarity: String) -> String:
 	var candidates: Array[String] = []
 	for row_key in ConfigDB.get_rows("collectibles"):
+		if not is_collectible_available(str(row_key)):
+			continue
 		if not rarity.is_empty() and str(ConfigDB.get_row("collectibles", row_key).get("rarity", "common")) != rarity:
 			continue
 		if bool(CollectionManager.discovered.get(row_key, false)):
 			continue
 		if InventoryManager.get_count(row_key) > 0:
 			continue
-		candidates.append(row_key)
+		candidates.append(str(row_key))
 	if candidates.is_empty():
 		return ""
 	return str(RandomManager.pick(candidates))
 
 func _pick_any_item() -> String:
-	var ids := ConfigDB.get_rows("collectibles").keys()
-	if ids.is_empty():
+	var candidates: Array[String] = []
+	for row_key in ConfigDB.get_rows("collectibles"):
+		if is_collectible_available(str(row_key)):
+			candidates.append(str(row_key))
+	if candidates.is_empty():
 		return ""
-	return str(RandomManager.pick(ids))
+	return str(RandomManager.pick(candidates))
+
+func is_collectible_available(item_id: String) -> bool:
+	var row := ConfigDB.get_row("collectibles", item_id)
+	if row.is_empty():
+		return false
+	var availability_day := str(row.get("availability_day", "")).strip_edges()
+	if availability_day.is_empty():
+		return true
+	return CalendarManager.get_day_of_year() == int(availability_day)
 
 func _pick_item_for_rarity(rarity: String) -> String:
 	var candidates: Array[String] = []
 	for row_key in ConfigDB.get_rows("collectibles"):
+		if not is_collectible_available(str(row_key)):
+			continue
 		if str(ConfigDB.get_row("collectibles", row_key).get("rarity", "common")) == rarity:
-			candidates.append(row_key)
+			candidates.append(str(row_key))
 	if candidates.is_empty():
 		return ""
 	return str(RandomManager.pick(candidates))
+
+func get_daily_collection_limit() -> int:
+	return maxi(0, int(ConfigDB.get_number("balance", "daily_collection_points", 6)))
+
+func get_collection_energy_cost() -> float:
+	return maxf(0.0, ConfigDB.get_number("balance", "collection_energy_cost", 2.0))
+
+func get_remaining_collection_points() -> int:
+	var remaining_daily := maxi(0, get_daily_collection_limit() - _found_today)
+	var energy_cost := get_collection_energy_cost()
+	if energy_cost <= 0.0:
+		return remaining_daily
+	var energy_points := int(floor(GameState.energy / energy_cost))
+	return maxi(0, mini(remaining_daily, energy_points))
+
+func _spend_collection_energy() -> bool:
+	var energy_cost := get_collection_energy_cost()
+	if energy_cost <= 0.0:
+		return true
+	if GameState.energy < energy_cost:
+		return false
+	GameState.change_energy(-energy_cost)
+	return true
 
 func get_today_count() -> int:
 	return _found_today
@@ -172,7 +230,7 @@ func get_save_data() -> Dictionary:
 
 func restore(data: Dictionary) -> void:
 	last_trigger_at = data.get("last_trigger_at", {}).duplicate(true)
-	_found_today = int(data.get("found_today", 0))
+	_found_today = clampi(int(data.get("found_today", 0)), 0, get_daily_collection_limit())
 
 func reset_new_game() -> void:
 	last_trigger_at.clear()

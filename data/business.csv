@@ -9,7 +9,13 @@ labor_restock_cost,36,yuan,应急招聘成本
 brain_restock_cost,30,yuan,集中休息成本
 shift_duration,120,second,单次营业时长
 shift_order_target,12,order,单次营业目标订单
-business_upgrade_1_cost,900,yuan,固定档口投入
+order_base_income,6,yuan,单笔订单基础收益
+order_income_per_equipment_level,2,yuan,每个设备等级增加的订单基础收益
+business_upgrade_1_cost,380,yuan,固定档口投入
 business_upgrade_2_cost,2600,yuan,小铺面投入
 business_upgrade_3_cost,7200,yuan,深夜食堂投入
 business_sale_min_level,2,level,允许转让经营权的最低等级
+equipment_max_level,3,level,单个工位最高升级等级
+queue_capacity,5,person,早餐店同时排队人数
+weekly_utility_bill,200,yuan,首周第7天水电与小额账单
+weekly_utility_bill_day,7,day,账单触发间隔

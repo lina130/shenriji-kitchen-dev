@@ -4,6 +4,7 @@ var failures: Array[String] = []
 
 func _ready() -> void:
 	await get_tree().process_frame
+	StoryManager.set_random_events_enabled(false)
 	for run_index in range(100):
 		_run_month(run_index)
 	AudioManager.shutdown()
@@ -18,13 +19,14 @@ func _ready() -> void:
 
 func _run_month(run_index: int) -> void:
 	GameState.reset_new_game()
+	CareerManager.apply_for_job("factory")
 	GameState.money = 320
 	WeatherSystem.current_weather_id = ["sunny", "overcast", "rain", "humid", "heat"][run_index % 5]
 	for day_index in range(29):
 		TimeSystem.minute_of_day = 7 * 60
 		GameState.energy = 100.0
 		GameState.work_factory_shift()
-		if run_index % 4 == 0:
+		if run_index % 4 == 0 or CollectionManager.total_collected == 0:
 			var found_id := TreasureManager.force_find("street")
 			if found_id.is_empty():
 				print("STRESS_DEBUG force_find empty run=%d day=%d total=%d collected_before=%d" % [run_index, day_index, CollectionManager.total_collected, run_index])

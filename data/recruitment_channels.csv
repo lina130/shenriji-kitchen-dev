@@ -1,0 +1,5 @@
+channel_id,name,refresh_cost,hire_multiplier,skill_bonus,reliability,housing_supported,description
+labor_market,劳务市场,0,1.0,0.0,0.72,false,人多但技能参差，可能只来一天就走。
+hometown,老乡介绍,80,0.92,0.05,0.84,true,可靠一些，但欠下的是老乡人情。
+referral,熟人推荐,120,1.08,0.14,0.93,true,关系达标的熟客才愿意介绍好手。
+daily,日结,30,0.78,-0.04,0.55,false,今天就能上工，也最容易突然离开。

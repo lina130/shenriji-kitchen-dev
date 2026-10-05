@@ -93,5 +93,5 @@ func announce_today() -> void:
 	var festival := get_festival()
 	if festival.is_empty():
 		return
-	NoticeManager.show_message("今天是%s。%s" % [festival.get("name", ""), festival.get("description", "")], "positive")
+	NoticeManager.show_scene_message("今天是%s。%s" % [festival.get("name", ""), festival.get("description", "")], "城市日历", "positive")
 	calendar_day_started.emit(get_day_of_year(), str(festival.get("name", "")))

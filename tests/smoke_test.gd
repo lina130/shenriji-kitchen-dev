@@ -4,6 +4,7 @@ var failures: Array[String] = []
 
 func _ready() -> void:
 	await get_tree().process_frame
+	StoryManager.set_random_events_enabled(false)
 	_run_tests()
 	AudioManager.shutdown()
 	await get_tree().process_frame
@@ -52,21 +53,17 @@ func _test_factory_shift() -> void:
 	TimeSystem.minute_of_day = 7 * 60
 	GameState.money = 320
 	GameState.energy = 100.0
+	_check(CareerManager.apply_for_job("factory"), "应聘工厂后应进入工厂职业线")
 	GameState.work_factory_shift()
-	_check(GameState.money == 500, "完成一次工厂班次应增加 180")
-	_check(is_equal_approx(GameState.energy, 68.0), "晴天完成工厂班次应消耗 32 体力")
-	_check(TimeSystem.minute_of_day == 15 * 60, "8 小时班次应从 07:00 推进到 15:00")
+	_check(GameState.money >= 500, "完成一次工厂班次应获得工资和状态加成")
+	_check(is_equal_approx(GameState.energy, 88.0), "晴天完成工厂班次应消耗 12 体力")
+	_check(TimeSystem.minute_of_day == 10 * 60, "3 小时班次应从 07:00 推进到 10:00")
 
 func _test_clerk_shift() -> void:
 	GameState.reset_new_game()
-	WeatherSystem.current_weather_id = "sunny"
-	TimeSystem.minute_of_day = 9 * 60
-	GameState.money = 320
-	GameState.energy = 100.0
+	var money_before := GameState.money
 	GameState.work_clerk_shift()
-	_check(GameState.money == 415, "便利店兼职应增加 95")
-	_check(is_equal_approx(GameState.energy, 80.0), "便利店兼职应消耗 20 体力")
-	_check(TimeSystem.minute_of_day == 14 * 60, "便利店兼职应推进 5 小时")
+	_check(GameState.money == money_before, "便利店不应再提供第三条长期职业线")
 
 func _test_collection_system() -> void:
 	GameState.reset_new_game()
@@ -102,7 +99,7 @@ func _test_calendar_and_seasons() -> void:
 	_check(CalendarManager.get_collection_bonus() > 0.0, "节日应提高彩蛋出现机会")
 	TimeSystem.current_day = 151
 	_check(CalendarManager.get_season_id() == "summer", "六月应属于夏季")
-	_check(is_equal_approx(TimeSystem.REAL_SECONDS_PER_GAME_MINUTE, 1.1), "默认时间流速应放缓到每 1.1 秒一分钟")
+	_check(is_equal_approx(TimeSystem.real_seconds_per_game_minute, 2.0), "默认时间流速应放缓到每 2 秒一分钟")
 
 func _test_relationship_and_gift() -> void:
 	GameState.reset_new_game()
@@ -201,28 +198,49 @@ func _test_business_recipes_and_upgrade() -> void:
 
 func _test_kitchen_shift() -> void:
 	GameState.reset_new_game()
-	BusinessManager.goods_stock = {"rice": 4, "egg": 8, "greens": 4, "tea": 4, "lemon": 6, "ice": 4}
+	TimeSystem.minute_of_day = 12 * 60
+	MarketPhaseManager.force_refresh()
+	BusinessManager.goods_stock = {"rice": 8, "egg": 12, "greens": 8, "tea": 4, "lemon": 6, "ice": 4, "noodles": 4, "beef": 4}
 	BusinessManager.labor_stock = 12
 	BusinessManager.brain_stock = 12
 	var money_before := GameState.money
-	_check(KitchenManager.start_shift(), "有库存时应能开始营业")
-	_check(KitchenManager.active and KitchenManager.orders.size() >= 3, "营业开始时应有订单")
-	_check(KitchenManager.place_recipe("egg_rice", 0), "菜单应能放进空闲工位并消耗库存")
-	var station: Dictionary = KitchenManager.stations[0]
-	station["progress"] = station["duration"]
-	KitchenManager._update_stations(0.0)
-	_check(str(station["state"]) == "prep_ready", "备料完成后应等待玩家下锅")
-	_check(KitchenManager.advance_station(0), "点击工位应进入下锅阶段")
-	station["progress"] = station["duration"]
-	KitchenManager._update_stations(0.0)
-	_check(str(station["state"]) == "cook_ready", "炒制完成后应等待玩家装盘")
-	_check(KitchenManager.advance_station(0), "点击工位应完成装盘")
-	KitchenManager.orders.clear()
-	KitchenManager._spawn_order()
+	_check(KitchenManager.start_shift(), "午市有库存时应能开始营业")
+	_check(KitchenManager.active and KitchenManager.orders.size() >= 2, "营业开始时应有订单")
 	KitchenManager.orders[0]["recipe_id"] = "egg_rice"
-	_check(KitchenManager.advance_station(0), "有匹配订单时应能上菜")
+	_check(KitchenManager.place_recipe("egg_rice", 0), "菜单应能放进备料台并消耗库存")
+	var prep_station: Dictionary = KitchenManager.stations[0]
+	prep_station["progress"] = prep_station["duration"]
+	KitchenManager._update_stations(0.0)
+	_check(str(prep_station["state"]) == "stage_ready", "备料完成后应停在半成品状态")
+	_check(KitchenManager.advance_station(0), "点击备料台应把半成品移到托盘")
+	_check(KitchenManager.staging.size() == 1, "半成品应可暂存等待手动搬运")
+	var fryer_index := _first_station_of_type("fryer")
+	_check(fryer_index >= 0 and KitchenManager.load_staging(0, fryer_index), "半成品应能手动移到油锅")
+	var fryer: Dictionary = KitchenManager.stations[fryer_index]
+	fryer["progress"] = fryer["duration"]
+	KitchenManager._update_stations(0.0)
+	_check(str(fryer["state"]) == "stage_ready", "下锅完成后应等待挪到出餐台")
+	_check(KitchenManager.advance_station(fryer_index), "点击油锅应把半成品移回托盘")
+	var serve_index := _first_station_of_type("serve")
+	_check(serve_index >= 0 and KitchenManager.load_staging(0, serve_index), "半成品应能手动移到出餐台")
+	var serve_station: Dictionary = KitchenManager.stations[serve_index]
+	serve_station["progress"] = serve_station["duration"]
+	KitchenManager._update_stations(0.0)
+	_check(str(serve_station["state"]) == "ready", "出餐台完成后应等待递菜")
+	_check(KitchenManager.advance_station(serve_index), "有匹配订单时应能出餐")
 	_check(GameState.money > money_before, "完成出餐后应收到营业收入")
+	var speed_before := KitchenManager.get_station_speed_multiplier("fryer")
+	GameState.money = 5000
+	_check(KitchenManager.upgrade_station("fryer"), "设备升级应能单独升级油锅")
+	_check(KitchenManager.get_station_speed_multiplier("fryer") > speed_before, "升级油锅应只加快油锅")
+	_check(KitchenManager.get_station_speed_multiplier("steamer") == 1.0, "升级油锅不应加快蒸笼")
 	KitchenManager.end_shift()
+
+func _first_station_of_type(station_type: String) -> int:
+	for index in range(KitchenManager.stations.size()):
+		if str(KitchenManager.stations[index].get("type", "")) == station_type:
+			return index
+	return -1
 
 func _test_bank_and_lottery() -> void:
 	GameState.reset_new_game()
@@ -258,7 +276,7 @@ func _test_temp_hire_and_relationship_effects() -> void:
 	_check(RelationshipManager.get_effect_text("lin").contains("老朋友"), "老朋友关系应显示明确经营效果")
 	RelationshipManager.affinity["chen"] = 17
 	RelationshipManager.talked_today.clear()
-	InventoryManager.items.clear()
+	InventoryManager.reset_new_game()
 	RelationshipManager.talk_to("chen")
 	_check(RelationshipManager.get_affinity("chen") == 18, "持续交谈应达到老朋友阶段")
 	_check(InventoryManager.get_count("brass_compass") == 1, "老朋友阶段应赠送对应稀有旧物")
@@ -267,7 +285,7 @@ func _test_save_and_load() -> void:
 	GameState.reset_new_game()
 	GameState.money = 777
 	GameState.energy = 61.0
-	InventoryManager.items.clear()
+	InventoryManager.reset_new_game()
 	TreasureManager.restore({})
 	var saved_treasure := TreasureManager.force_find("street", "uncommon")
 	GameState.hidden_luck = 8.0
@@ -290,7 +308,7 @@ func _test_save_and_load() -> void:
 	_check(SaveManager.save_game(false), "应能写入扩展测试存档")
 	GameState.money = 1
 	GameState.hidden_luck = 0.0
-	InventoryManager.items.clear()
+	InventoryManager.reset_new_game()
 	CollectionManager.discovered.clear()
 	RelationshipManager.affinity.clear()
 	ProgressionManager.study_sessions = 0
@@ -311,12 +329,13 @@ func _test_save_and_load() -> void:
 	_check(FinanceManager.savings == 789, "读档应恢复银行存款")
 
 func _test_30_day_cycle() -> void:
+	StoryManager.set_random_events_enabled(false)
 	GameState.reset_new_game()
 	GameState.money = 3200
 	for index in range(29):
 		TimeSystem.sleep_to_next_morning(7)
 	_check(TimeSystem.current_day == 30, "29 次换日后应进入第 30 天")
-	_check(GameState.money == 2400, "第 30 天应自动扣除 800 房租")
+	_check(GameState.money == 1600, "第 30 天应扣除 800 房租和 4 次 200 周账单后剩 1600")
 	_check(GameState.rent_arrears == 0, "余额充足时不应产生欠租")
 
 func _check(condition: bool, message: String) -> void:

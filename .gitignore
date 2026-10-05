@@ -30,3 +30,18 @@ release/
 docs/*.png.import
 
 /work/
+
+# build / test artifacts (local only)
+output/
+Godot/
+NVIDIA Corporation/
+
+# python cache
+__pycache__/
+*.pyc
+
+# AI team runtime state (keep docs/ai_team/outputs/*.md)
+docs/ai_team/*.sqlite
+docs/ai_team/*.sqlite-journal
+docs/ai_team/*.sqlite-wal
+docs/ai_team/messages.jsonl

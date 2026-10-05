@@ -1,0 +1,4 @@
+rod_id,name,cost,catch_bonus,rare_bonus,max_level,description
+bamboo_rod,竹制鱼竿,0,0.0,0.0,3,河边最普通的一根竿。
+carbon_rod,碳素鱼竿,420,0.12,0.08,3,更轻，甩线和收线都稳。
+night_rod,夜钓竿,980,0.18,0.16,3,强叔特制，适合夜里钓稀有鱼。

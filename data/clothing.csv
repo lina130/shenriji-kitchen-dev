@@ -1,0 +1,7 @@
+clothing_id,name,price,slot,color,social_bonus,work_bonus,description
+work_jacket,耐脏工作外套,120,top,#4e6970,0.0,0.08,不显眼但经得住油烟和机油。
+clean_shirt,干净白衬衫,180,top,#d8d1c2,0.08,0.02,见客和面试时更体面。
+delivery_jacket,亮色骑手夹克,220,top,#d58b45,0.03,0.05,走路利索，在人群里也容易被看见。
+soft_hat,软布帽,60,hat,#8d754f,0.0,0.03,挡灰也挡一点厨房蒸汽。
+lucky_cap,老街棒球帽,150,hat,#4f7890,0.04,0.01,城中村年轻人常戴的款式。
+work_boots,防滑工鞋,160,shoes,#3e474b,0.0,0.06,站久了脚不会那么难受。

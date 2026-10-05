@@ -11,4 +11,6 @@ if (-not $godot) {
 $testData = Join-Path $root ".tools\test_userdata"
 New-Item -ItemType Directory -Force -Path $testData | Out-Null
 & $godotPath --headless --path $root --user-data-dir $testData -- --smoke-test
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+& $godotPath --headless --path $root --user-data-dir $testData -- --world-systems
 exit $LASTEXITCODE

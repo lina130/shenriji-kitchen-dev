@@ -1,0 +1,10 @@
+asset_id,kind,path,fallback_asset_id,slice,note
+panel.paper,texture,res://assets/art/formal/ui/panel.png,,24,暖纸面板
+panel.dialog,texture,res://assets/art/formal/ui/dialog.png,,24,NPC 对话底
+button.primary.normal,texture,res://assets/art/formal/ui/button.png,,18,主按钮
+button.primary.hover,texture,res://assets/art/formal/ui/button_hover.png,button.primary.normal,18,主按钮 hover
+button.primary.pressed,texture,res://assets/art/formal/ui/button_pressed.png,button.primary.normal,18,主按钮 pressed
+button.primary.disabled,texture,res://assets/art/formal/ui/button_disabled.png,button.primary.normal,18,主按钮 disabled
+slot.normal,texture,res://assets/art/formal/ui/slot.png,,14,槽位
+slot.selected,texture,res://assets/art/formal/ui/slot_selected.png,slot.normal,14,选中槽位
+title.window,texture,res://assets/art/formal/ui/title.png,,24,窗口标题

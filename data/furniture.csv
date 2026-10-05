@@ -1,0 +1,17 @@
+furniture_id,name,price,category,bonus_type,bonus_value,description
+bed_soft,棉被木床,180,bed,energy,4,睡一晚精神更足。
+lamp_warm,暖光台灯,120,light,study,0.15,看书时不容易走神。
+rug_wool,羊毛地毯,150,rug,comfort,0.1,踩上去脚心暖暖的。
+shelf_wood,旧木书架,220,shelf,storage,4,能多放一点杂货。
+plant_green,绿萝盆栽,80,plant,ambient,0.05,屋里多了一点活气。
+eat_table_small,小饭桌,140,table,food,0.12,在家吃饭更香。
+tv_old,旧电视,300,appliance,relax,0.12,忙完一天能松快些。
+aquarium_glass,玻璃鱼缸,260,aquarium,calm,0.15,看着水发呆很治愈。
+kettle_tea,煮茶炉,160,appliance,tea,0.1,泡茶时顺手也想请人喝一杯。
+cat_tree,猫爬架,240,pet,pet_growth,0.2,宠物在家更开心，成长更快。
+coffee_table,旧木茶几,260,table,food,0.15,朋友来时能坐下来慢慢喝茶。
+reading_chair,藤编阅读椅,320,appliance,relax,0.16,窝在这里看一会儿书很舒服。
+small_fridge,小冰箱,420,appliance,food,0.18,家里常备一点吃的，回来不至于空着肚子。
+desk_lamp,暖光书桌灯,180,light,study,0.18,夜里看书不刺眼，也更容易静下来。
+pet_bed,宠物小床,200,pet,pet_growth,0.18,小家伙有自己的角落，会睡得更安稳。
+display_cabinet,玻璃陈列柜,360,shelf,storage,6,把淘来的旧物摆出来，屋里也有了自己的故事。

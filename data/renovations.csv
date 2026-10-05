@@ -1,0 +1,5 @@
+renovation_id,name,cost,energy_bonus,relax_bonus,study_bonus,food_bonus,description
+warm_walls,暖色墙面和灯光,800,0.04,0.05,0.02,0.03,墙面和灯光换成暖色，回家时更容易松下来。
+bright_window,明亮窗景改造,1600,0.03,0.08,0.06,0.02,旧窗换成大玻璃，光照和视野都好了很多。
+quiet_study,安静书房角,2400,0.05,0.06,0.12,0.04,重新隔出书桌和书架，读书不容易被打断。
+family_room,家庭会客装修,3200,0.07,0.12,0.04,0.08,沙发和饭桌重新摆过，朋友和家人来都坐得下。

@@ -1,0 +1,7 @@
+hobby_id,name,entry_cost,session_minutes,energy_cost,career_line,mood_gain,stress_relief,description
+photography,街头摄影,300,180,14,freelance,7,10,把城市里的光线和人群拍下来。
+music,吉他弹唱,420,180,12,freelance,10,12,一首歌能把一天的烦躁压下去。
+painting,水彩绘画,260,180,10,freelance,8,14,画窗外的楼和树，慢慢找到自己的颜色。
+fitness,器械健身,180,120,22,factory,5,16,身体强一点，工作也稳一点。
+gardening,阳台园艺,160,150,10,,9,12,种小盆栽，让屋子多一点活气。
+reading,夜读,80,150,8,study,8,15,不是为了考试，只是想把一本书读完。

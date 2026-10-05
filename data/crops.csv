@@ -1,0 +1,11 @@
+crop_id,name,seed_cost,goods_id,yield_amount,grow_days,seasons,description
+rice_crop,水稻,6,rice,6,3,spring|summer|autumn,水田里长的米，收一季能顶好几天的饭。
+greens_crop,小青菜,5,greens,6,2,spring|autumn|winter,长得快，早晚浇水就能收。
+tomato_crop,番茄,8,tomato,5,3,spring|summer,酸甜多汁，早餐和夜宵都用得上。
+corn_crop,玉米,7,corn,6,3,summer|autumn,喂鸡的玉米，鸡肥了蛋就多。
+tea_crop,茶树,10,tea,5,4,spring|summer,叶子嫩，采下来就是茶底。
+lemon_crop,柠檬树,9,lemon,5,3,summer|autumn,天气热的时候最好卖。
+beef_cattle,肉牛,26,beef,4,5,spring|summer|autumn|winter,养得久，但一次能出不少好肉。
+chicken_pen,走地鸡,14,chicken,5,4,spring|summer|autumn|winter,自家养的鸡，餐馆和早餐店都要。
+flour_wheat,小麦,6,flour,6,3,spring|summer,面粉是早餐店一天的开始。
+red_bean_crop,红豆,7,red_bean,5,3,autumn|winter,煮糖水、做点心的老搭档。

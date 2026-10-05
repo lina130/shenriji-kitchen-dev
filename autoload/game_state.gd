@@ -85,11 +85,14 @@ func get_speed_multiplier() -> float:
 	return base + ProgressionManager.get_speed_bonus()
 
 func can_work_factory() -> bool:
-	return TimeSystem.minute_of_day >= 7 * 60 and TimeSystem.minute_of_day <= 18 * 60
+	return CareerManager.can_work("factory") and TimeSystem.minute_of_day >= 7 * 60 and TimeSystem.minute_of_day <= 18 * 60
 
 func can_work_clerk() -> bool:
-	return TimeSystem.minute_of_day >= 9 * 60 and TimeSystem.minute_of_day <= 17 * 60
+	return false
 func work_factory_shift() -> void:
+	if health <= 20.0:
+		NoticeManager.show_message("身体已经吃不消了，先去诊所看看。", "warning", "诊所护士")
+		return
 	if not can_work_factory():
 		NoticeManager.show_message("工厂今天已经收工了，明早再来吧。", "warning")
 		return
@@ -97,30 +100,55 @@ func work_factory_shift() -> void:
 	if energy < energy_cost:
 		NoticeManager.show_message("实在太累了，今天干不动重活了。", "warning")
 		return
+	var shift_quality := CareerManager.evaluate_shift_quality()
 	change_energy(-energy_cost)
 	TimeSystem.advance_minutes(factory_shift_minutes)
-	var wage := factory_wage + ProgressionManager.get_factory_wage_bonus()
+	var wage := int(round((factory_wage + ProgressionManager.get_factory_wage_bonus()) * CareerManager.get_shift_wage_multiplier() * (1.0 + WellbeingManager.get_action_bonus("work"))))
 	earn(wage, "今天的工钱到手了：¥%d" % wage)
 	ProgressionManager.record_work("factory")
+	CareerManager.record_shift("factory", shift_quality)
+	AchievementManager.record_event("career_route:factory")
+	NoticeManager.show_message(CareerManager.get_manager_hint(), "hint")
 	TreasureManager.try_trigger("work_shift")
 	player_action_completed.emit("factory_shift")
 
-func work_clerk_shift() -> void:
-	if not can_work_clerk():
-		NoticeManager.show_message("现在不是兼职时段，店里正忙着交接。", "warning")
+func work_career_shift(line_id: String) -> void:
+	if health <= 20.0:
+		NoticeManager.show_message("身体已经吃不消了，先去诊所看看。", "warning", "诊所护士")
 		return
-	var energy_cost := clerk_energy_cost * WeatherSystem.get_work_energy_multiplier() * ProgressionManager.get_work_energy_multiplier()
+	if not CareerManager.can_work(line_id):
+		NoticeManager.show_message("还没有正式入职这条路线，先去找招聘牌应聘。", "warning")
+		return
+	var line_config := {
+		"office": {"minutes": 480, "energy": 28.0, "wage": 150},
+		"study": {"minutes": 240, "energy": 18.0, "wage": 0},
+		"public": {"minutes": 420, "energy": 22.0, "wage": 135},
+		"freelance": {"minutes": 360, "energy": 24.0, "wage": 120},
+		"logistics": {"minutes": 420, "energy": 26.0, "wage": 135},
+		"craft": {"minutes": 390, "energy": 24.0, "wage": 140},
+	}
+	var config: Dictionary = line_config.get(line_id, {"minutes": 360, "energy": 24.0, "wage": 100})
+	var energy_cost := float(config["energy"]) * WeatherSystem.get_work_energy_multiplier() * ProgressionManager.get_work_energy_multiplier()
 	if energy < energy_cost:
-		NoticeManager.show_message("现在这副样子站几个钟头，怕是撑不住。", "warning")
+		NoticeManager.show_message("今天状态太差，先吃口东西休息一下。", "warning")
 		return
+	var shift_quality := CareerManager.evaluate_shift_quality()
 	change_energy(-energy_cost)
-	TimeSystem.advance_minutes(clerk_shift_minutes)
-	var sales_bonus := 1.0 + maxf(0.0, WeatherSystem.get_store_sales_bonus() - 1.0) * 0.35
-	var wage := int(round((clerk_wage + ProgressionManager.get_clerk_wage_bonus()) * sales_bonus))
-	earn(wage, "小林把今天的兼职工钱结给了你：¥%d" % wage)
-	ProgressionManager.record_work("clerk")
+	TimeSystem.advance_minutes(int(config["minutes"]))
+	var base_wage := int(config["wage"])
+	var credential_bonus := EducationManager.get_career_bonus(line_id) + HobbyManager.get_career_bonus(line_id)
+	var wage := int(round(float(base_wage) * CareerManager.get_shift_wage_multiplier() * (1.0 + WellbeingManager.get_action_bonus("work") + credential_bonus))) if base_wage > 0 else 0
+	if wage > 0:
+		earn(wage, "今天这份工作结了 ¥%d。" % wage)
+	ProgressionManager.record_work(line_id)
+	CareerManager.record_shift(line_id, shift_quality)
+	AchievementManager.record_event("career_route:" + line_id)
+	NoticeManager.show_message(CareerManager.get_manager_hint(), "hint")
 	TreasureManager.try_trigger("work_shift")
-	player_action_completed.emit("clerk_shift")
+	player_action_completed.emit(line_id + "_shift")
+
+func work_clerk_shift() -> void:
+	NoticeManager.show_message("现在只开放餐饮和工厂两条职业线，便利店不会再招长期兼职。", "hint")
 
 func study_at_desk() -> void:
 	if TimeSystem.minute_of_day < 7 * 60 or TimeSystem.minute_of_day > 23 * 60:
@@ -154,7 +182,7 @@ func sleep_to_next_day() -> void:
 	if not can_sleep:
 		NoticeManager.show_message("天还亮着，晚一点再收拾睡觉吧。", "warning")
 		return
-	energy = max_energy
+	energy = minf(120.0, max_energy + HousingManager.get_bonus("energy") + FamilyManager.get_bonus("energy"))
 	health = minf(100.0, health + 2.0)
 	TimeSystem.sleep_to_next_morning(7)
 	energy_changed.emit(energy)
@@ -163,6 +191,11 @@ func sleep_to_next_day() -> void:
 	player_action_completed.emit("sleep")
 
 func on_item_used(item: Dictionary) -> void:
+	var item_id := str(item.get("id", ""))
+	WellbeingManager.consume_item(item_id)
+	if item_id in ["photo_frame", "warm_blanket"]:
+		RoomManager.install_decor(item_id)
+		return
 	var energy_gain := float(item.get("energy", 0.0))
 	if energy_gain > 0.0:
 		change_energy(energy_gain)
@@ -182,13 +215,23 @@ func get_collection_luck_bonus() -> float:
 func get_hidden_reputation() -> float:
 	return hidden_reputation
 func _on_day_started(day_number: int) -> void:
+	InventoryManager.sell_shipping_bin()
 	RandomManager.begin_new_day(day_number)
 	CalendarManager.announce_today()
 	WeatherSystem.begin_new_day(day_number)
 	CollectionManager.refresh_for_day(day_number)
 	RelationshipManager.begin_new_day(day_number)
 	MarketEconomyManager.begin_new_day(day_number)
+	NightMarketManager.begin_new_day(day_number)
+	FarmManager.begin_new_day(day_number)
+	PetManager.begin_new_day(day_number)
+	StaffManager.begin_new_day(day_number)
 	BusinessManager.begin_new_day(day_number)
+	EnterpriseManager.begin_new_day(day_number)
+	WellbeingManager.begin_new_day(day_number)
+	FamilyManager.begin_new_day(day_number)
+	StoryManager.begin_new_day(day_number)
+	EndingManager.begin_new_day(day_number)
 	FinanceManager.begin_new_day(day_number)
 	_low_energy_warned_on_day = -1
 	if day_number > 1 and day_number % rent_interval_days == 0:
@@ -249,6 +292,7 @@ func _load_balance_config() -> void:
 	money = starting_money
 
 func reset_new_game() -> void:
+	SaveManager.prepare_new_game()
 	_load_balance_config()
 	energy = 100.0
 	max_energy = 100.0
@@ -265,6 +309,30 @@ func reset_new_game() -> void:
 	MarketEconomyManager.reset_new_game()
 	ExpeditionManager.reset_new_game()
 	BusinessManager.reset_new_game()
+	FarmManager.reset_new_game()
+	PetManager.reset_new_game()
+	RoomManager.reset_new_game()
+	StaffManager.reset_new_game()
+	CareerManager.reset_new_game()
+	StoryManager.reset_new_game()
+	FishingManager.reset_new_game()
+	HousingManager.reset_new_game()
+	TravelManager.reset_new_game()
+	EnterpriseManager.reset_new_game()
+	AchievementManager.reset_new_game()
+	PlatformIntegrationManager.reset_new_game()
+	FamilyManager.reset_new_game()
+	WellbeingManager.reset_new_game()
+	UnlockManager.reset_new_game()
+	MedicalManager.reset_new_game()
+	EducationManager.reset_new_game()
+	EndingManager.reset_new_game()
+	HobbyManager.reset_new_game()
+	PhotoManager.reset_new_game()
+	FestivalManager.reset_new_game()
+	NightMarketManager.reset_new_game()
+	NpcStoryManager.reset_new_game()
+	WardrobeManager.reset_new_game()
 	FinanceManager.reset_new_game()
 	TreasureManager.reset_new_game()
 	KitchenManager.reset_new_game()

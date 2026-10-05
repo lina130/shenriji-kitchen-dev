@@ -6,20 +6,30 @@ signal late_night_reached
 signal paused_changed(is_paused: bool)
 
 const MINUTES_PER_DAY := 1440
-const REAL_SECONDS_PER_GAME_MINUTE := 1.1
+const DEFAULT_REAL_SECONDS_PER_GAME_MINUTE := 2.0
 const MAX_TIME_SCALE := 2.0
 
 var current_day := 1
 var minute_of_day := 7 * 60
+var real_seconds_per_game_minute := DEFAULT_REAL_SECONDS_PER_GAME_MINUTE
 var paused := false
 var time_scale := 1.0
 var _minute_accumulator := 0.0
+
+func _ready() -> void:
+	_load_time_config()
+
+func _load_time_config() -> void:
+	real_seconds_per_game_minute = maxf(0.1, ConfigDB.get_number("balance", "real_seconds_per_game_minute", DEFAULT_REAL_SECONDS_PER_GAME_MINUTE))
+
+func set_real_seconds_per_game_minute(value: float) -> void:
+	real_seconds_per_game_minute = maxf(0.1, value)
 var _late_night_reported := false
 
 func _process(delta: float) -> void:
 	if paused:
 		return
-	_minute_accumulator += delta / REAL_SECONDS_PER_GAME_MINUTE * time_scale
+	_minute_accumulator += delta / real_seconds_per_game_minute * time_scale
 	var whole_minutes := int(floor(_minute_accumulator))
 	if whole_minutes <= 0:
 		return
